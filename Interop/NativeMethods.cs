@@ -1,7 +1,7 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
-namespace QuickAccessTree.Interop;
+namespace SidebarBuddy.Interop;
 
 internal static class NativeMethods
 {

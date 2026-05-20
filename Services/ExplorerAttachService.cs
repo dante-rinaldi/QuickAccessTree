@@ -1,11 +1,11 @@
-using System.Text;
+﻿using System.Text;
 using System.Timers;
 using System.Windows;
 using System.Windows.Interop;
-using QuickAccessTree.Interop;
-using QuickAccessTree.Models;
+using SidebarBuddy.Interop;
+using SidebarBuddy.Models;
 
-namespace QuickAccessTree.Services;
+namespace SidebarBuddy.Services;
 
 public class ExplorerAttachService : IDisposable
 {
@@ -19,7 +19,10 @@ public class ExplorerAttachService : IDisposable
     private nint _locationHook;
 
     private nint _explorerHwnd;
-    private System.Timers.Timer? _pollTimer;
+    private System.Timers.Timer?        _pollTimer;
+    private CancellationTokenSource?    _showCts;
+
+    public double ShowDelaySecs { get; set; } = 0;
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool EnumWindows(EnumWindowsProc fn, nint lp);
@@ -81,7 +84,7 @@ public class ExplorerAttachService : IDisposable
             if (fg != _explorerHwnd)
                 Track(fg);
             else if (!SidebarIsVisible())
-                ShowSidebar();
+                ShowSidebar(immediate: false);
         }
         else
         {
@@ -124,7 +127,7 @@ public class ExplorerAttachService : IDisposable
     {
         _explorerHwnd = hwnd;
         SnapSidebar(hwnd);
-        ShowSidebar();
+        ShowSidebar(immediate: false);
     }
 
     public void ExplicitDetach()
@@ -136,7 +139,7 @@ public class ExplorerAttachService : IDisposable
     public void ForceAttach()
     {
         if (_explorerHwnd != nint.Zero && NativeMethods.IsWindow(_explorerHwnd))
-        { SnapSidebar(_explorerHwnd); ShowSidebar(); return; }
+        { SnapSidebar(_explorerHwnd); ShowSidebar(immediate: true); return; }
 
         nint found = nint.Zero;
         EnumWindows((h, _) =>
@@ -146,7 +149,7 @@ public class ExplorerAttachService : IDisposable
             return true;
         }, nint.Zero);
 
-        if (found != nint.Zero) Track(found);
+        if (found != nint.Zero) { _explorerHwnd = found; SnapSidebar(found); ShowSidebar(immediate: true); }
     }
 
     // ── Positioning ───────────────────────────────────────────────────────
@@ -168,7 +171,25 @@ public class ExplorerAttachService : IDisposable
 
     // ── Show / Hide ───────────────────────────────────────────────────────
 
-    private void ShowSidebar()
+    private void ShowSidebar(bool immediate)
+    {
+        if (!immediate && ShowDelaySecs > 0)
+        {
+            _showCts?.Cancel();
+            _showCts?.Dispose();
+            _showCts = new CancellationTokenSource();
+            var token = _showCts.Token;
+            _ = Task.Delay(TimeSpan.FromSeconds(ShowDelaySecs), token)
+                    .ContinueWith(_ => Dispatch(ShowSidebarNow),
+                        CancellationToken.None,
+                        TaskContinuationOptions.OnlyOnRanToCompletion,
+                        TaskScheduler.Default);
+            return;
+        }
+        ShowSidebarNow();
+    }
+
+    private void ShowSidebarNow()
     {
         // WPF must be Visible for it to render into the HWND. A bare Win32
         // ShowWindow won't bring rendering back after Window.Hide().
@@ -186,6 +207,7 @@ public class ExplorerAttachService : IDisposable
 
     private void HideSidebar()
     {
+        _showCts?.Cancel();
         var helper = new WindowInteropHelper(_sidebar);
         NativeMethods.SetWindowPos(helper.Handle, NativeMethods.HWND_NOTOPMOST,
             0, 0, 0, 0,
@@ -253,6 +275,8 @@ public class ExplorerAttachService : IDisposable
 
     public void Dispose()
     {
+        _showCts?.Cancel();
+        _showCts?.Dispose();
         _pollTimer?.Stop();
         _pollTimer?.Dispose();
         if (_foregroundHook != nint.Zero) NativeMethods.UnhookWinEvent(_foregroundHook);

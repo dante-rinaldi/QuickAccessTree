@@ -1,39 +1,50 @@
-namespace QuickAccessTree.Models;
+﻿namespace SidebarBuddy.Models;
 
-public enum DockSide { Right, Left }
+public enum DockSide             { Right, Left }
+public enum ColorInheritanceMode { PerFolder, Cascade }
+public enum ShowDelay            { Instant, HalfSecond, TwoSeconds, FiveSeconds }
+public enum ThemeMode            { System, Dark, Light }
+public enum AppSkin
+{
+    SolidDark, SolidLight, FrostedGlass, Mica,
+    NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast
+}
 
 public class AppSettings
 {
-    public List<CustomFolder> CustomFolders { get; set; } = new();
-
-    // path → hex color, applies to both QA-imported and custom folders
+    public List<CustomFolder>    CustomFolders     { get; set; } = new();
     public Dictionary<string, string> FolderColors { get; set; } = new();
-
-    public bool ImportQuickAccess { get; set; } = true;
-    public double SidebarWidthDip { get; set; } = 220;
-    public DockSide DockSide { get; set; } = DockSide.Right;
-
-    // Paths explicitly removed by the user (suppressed even if in Quick Access)
+    public bool   ImportQuickAccess  { get; set; } = true;
+    public double SidebarWidthDip    { get; set; } = 220;
+    public DockSide DockSide         { get; set; } = DockSide.Right;
     public List<string> RemovedPaths { get; set; } = new();
-
-    // Ordered list defining hierarchy and sibling order.
-    // List order = sibling order within each parent. Folders not in this list
-    // are appended on first appearance with parent inferred from path ancestry.
-    public List<FolderPlacement> Placements { get; set; } = new();
-
-    // Persisted expansion state — path → IsExpanded
+    public List<FolderPlacement> Placements  { get; set; } = new();
     public Dictionary<string, bool> ExpandedPaths { get; set; } = new();
+
+    // General settings
+    public ColorInheritanceMode ColorInheritance   { get; set; } = ColorInheritanceMode.PerFolder;
+    public ShowDelay            VisibilityDelay     { get; set; } = ShowDelay.Instant;
+    public bool                 LaunchOnStartup     { get; set; } = false;
+    public bool                 RestoreExpandedState{ get; set; } = true;
+
+    // Appearance
+    public ThemeMode Theme { get; set; } = ThemeMode.System;
+    public AppSkin   Skin  { get; set; } = AppSkin.SolidDark;
+
+    // License / trial
+    public DateTime TrialStartDate { get; set; } = DateTime.UtcNow;
+    public bool     IsRegistered   { get; set; } = false;
+    public string?  LicenseKey     { get; set; }
 }
 
 public class CustomFolder
 {
-    public string Path { get; set; } = string.Empty;
+    public string Path        { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
 }
 
 public class FolderPlacement
 {
-    public string Path { get; set; } = string.Empty;
-    // null = root-level node
+    public string  Path       { get; set; } = string.Empty;
     public string? ParentPath { get; set; }
 }

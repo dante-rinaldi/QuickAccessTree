@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickAccessTree", "QuickAccessTree.csproj", "{F8C8F483-0FD6-4F1D-A970-82898916B986}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SidebarBuddy", "SidebarBuddy.csproj", "{F8C8F483-0FD6-4F1D-A970-82898916B986}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

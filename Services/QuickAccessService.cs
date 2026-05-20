@@ -1,7 +1,7 @@
-using System.IO;
-using QuickAccessTree.Models;
+﻿using System.IO;
+using SidebarBuddy.Models;
 
-namespace QuickAccessTree.Services;
+namespace SidebarBuddy.Services;
 
 public class QuickAccessService
 {

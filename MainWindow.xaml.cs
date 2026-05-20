@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -7,10 +7,10 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using QuickAccessTree.Models;
-using QuickAccessTree.Services;
+using SidebarBuddy.Models;
+using SidebarBuddy.Services;
 
-namespace QuickAccessTree;
+namespace SidebarBuddy;
 
 public partial class MainWindow : Window
 {
@@ -103,10 +103,16 @@ public partial class MainWindow : Window
                 roots.Add(node);
         }
 
+        // Apply color cascade if enabled
+        if (_settings.ColorInheritance == ColorInheritanceMode.Cascade)
+            foreach (var root in roots)
+                CascadeColor(root, null);
+
         // Apply expanded state and hook persistence
         foreach (var node in available.Values)
         {
-            if (_settings.ExpandedPaths.TryGetValue(node.Path, out var ex))
+            if (_settings.RestoreExpandedState &&
+                _settings.ExpandedPaths.TryGetValue(node.Path, out var ex))
                 node.IsExpanded = ex;
             node.PropertyChanged += Node_PropertyChanged;
         }
@@ -120,6 +126,17 @@ public partial class MainWindow : Window
     {
         if (_settings.FolderColors.TryGetValue(n.Path, out var c))
             n.Color = c;
+    }
+
+    private void CascadeColor(FolderNode node, string? parentColor)
+    {
+        // Only inherit if no explicit color was set for this node
+        if (!_settings.FolderColors.ContainsKey(node.Path) && parentColor != null)
+            node.Color = parentColor;
+
+        string? colorForChildren = node.Color ?? parentColor;
+        foreach (var child in node.Children)
+            CascadeColor(child, colorForChildren);
     }
 
     private void Node_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -201,6 +218,8 @@ public partial class MainWindow : Window
     }
 
     // ── Header buttons ────────────────────────────────────────────────────
+
+    public void ReloadTree() => LoadTree();
 
     private void RefreshBtn_Click(object sender, RoutedEventArgs e) => LoadTree();
 

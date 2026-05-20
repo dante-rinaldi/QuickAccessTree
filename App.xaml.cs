@@ -1,11 +1,11 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interop;
-using QuickAccessTree.Interop;
-using QuickAccessTree.Models;
-using QuickAccessTree.Services;
+using SidebarBuddy.Interop;
+using SidebarBuddy.Models;
+using SidebarBuddy.Services;
 using Forms = System.Windows.Forms;
 
-namespace QuickAccessTree;
+namespace SidebarBuddy;
 
 public partial class App : System.Windows.Application
 {
@@ -13,6 +13,7 @@ public partial class App : System.Windows.Application
     private ExplorerAttachService? _attachService;
     private Forms.NotifyIcon?      _trayIcon;
     private SettingsService        _settingsService = new();
+    private SettingsWindow?        _settingsWindow;
     public  AppSettings            Settings { get; private set; } = new();
 
     protected override void OnStartup(StartupEventArgs e)
@@ -48,18 +49,34 @@ public partial class App : System.Windows.Application
     {
         _trayIcon = new Forms.NotifyIcon
         {
-            Text    = "Quick Access Tree",
+            Text    = "Sidebar Buddy",
             Visible = true,
             Icon    = System.Drawing.SystemIcons.Application,
         };
 
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("Show sidebar", null, (_, _) => Dispatcher.Invoke(ForceShow));
+        menu.Items.Add("Settings…",    null, (_, _) => Dispatcher.Invoke(OpenSettings));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => Dispatcher.Invoke(Shutdown));
 
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick     += (_, _) => Dispatcher.Invoke(ForceShow);
+    }
+
+    private void OpenSettings()
+    {
+        if (_settingsWindow != null && _settingsWindow.IsLoaded)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+        _settingsWindow = new SettingsWindow(
+            Settings,
+            _settingsService,
+            _attachService,
+            onApplied: () => _mainWindow?.ReloadTree());
+        _settingsWindow.Show();
     }
 
     private void ForceShow()

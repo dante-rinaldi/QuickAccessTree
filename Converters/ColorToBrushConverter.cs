@@ -1,8 +1,8 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace QuickAccessTree.Converters;
+namespace SidebarBuddy.Converters;
 
 public class ColorToBrushConverter : IValueConverter
 {
