@@ -9,6 +9,7 @@ namespace SidebarBuddy;
 
 public partial class App : System.Windows.Application
 {
+    private static Mutex?          _singleInstanceMutex;
     private MainWindow?            _mainWindow;
     private ExplorerAttachService? _attachService;
     private Forms.NotifyIcon?      _trayIcon;
@@ -18,6 +19,16 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        _singleInstanceMutex = new Mutex(true, "SidebarBuddy_SingleInstance_v1", out bool created);
+        if (!created)
+        {
+            _singleInstanceMutex.Dispose();
+            System.Windows.MessageBox.Show("Sidebar Buddy is already running. Check the system tray.",
+                "Sidebar Buddy", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+
         base.OnStartup(e);
         Settings = _settingsService.Load();
 
@@ -75,7 +86,12 @@ public partial class App : System.Windows.Application
             Settings,
             _settingsService,
             _attachService,
-            onApplied: () => _mainWindow?.ReloadTree());
+            onApplied: () =>
+            {
+                _mainWindow?.ReloadTree();
+                if (_attachService != null)
+                    _attachService.AutoHide = Settings.AutoHide;
+            });
         _settingsWindow.Show();
     }
 
@@ -92,6 +108,8 @@ public partial class App : System.Windows.Application
     {
         _trayIcon?.Dispose();
         _attachService?.Dispose();
+        try { _singleInstanceMutex?.ReleaseMutex(); } catch { }
+        _singleInstanceMutex?.Dispose();
         base.OnExit(e);
     }
 }

@@ -37,6 +37,10 @@ public partial class SettingsWindow : Window
         RbColorPerFolder.IsChecked = _settings.ColorInheritance == ColorInheritanceMode.PerFolder;
         RbColorCascade.IsChecked   = _settings.ColorInheritance == ColorInheritanceMode.Cascade;
 
+        // General — sidebar behavior
+        RbStayVisible.IsChecked = !_settings.AutoHide;
+        RbAutoHide.IsChecked    =  _settings.AutoHide;
+
         // General — delay
         RbDelayInstant.IsChecked = _settings.VisibilityDelay == ShowDelay.Instant;
         RbDelayHalf.IsChecked    = _settings.VisibilityDelay == ShowDelay.HalfSecond;
@@ -121,6 +125,9 @@ public partial class SettingsWindow : Window
         _settings.ColorInheritance = RbColorCascade.IsChecked == true
             ? ColorInheritanceMode.Cascade : ColorInheritanceMode.PerFolder;
 
+        // Sidebar behavior
+        _settings.AutoHide = RbAutoHide.IsChecked == true;
+
         // Visibility delay
         _settings.VisibilityDelay = RbDelayHalf.IsChecked  == true ? ShowDelay.HalfSecond
                                   : RbDelayTwo.IsChecked   == true ? ShowDelay.TwoSeconds
@@ -149,6 +156,7 @@ public partial class SettingsWindow : Window
         {
             _attachSvc.UpdateDockSide(_settings.DockSide);
             _attachSvc.ShowDelaySecs = DelayToSeconds(_settings.VisibilityDelay);
+            _attachSvc.AutoHide      = _settings.AutoHide;
         }
 
         _settingsSvc.Save(_settings);

@@ -23,6 +23,7 @@ public class AppSettings
 
     // General settings
     public ColorInheritanceMode ColorInheritance   { get; set; } = ColorInheritanceMode.PerFolder;
+    public bool                 AutoHide            { get; set; } = false;
     public ShowDelay            VisibilityDelay     { get; set; } = ShowDelay.Instant;
     public bool                 LaunchOnStartup     { get; set; } = false;
     public bool                 RestoreExpandedState{ get; set; } = true;

@@ -23,6 +23,10 @@ public class ExplorerAttachService : IDisposable
     private CancellationTokenSource?    _showCts;
 
     public double ShowDelaySecs { get; set; } = 0;
+    public bool   AutoHide      { get; set; } = false;
+    public bool   IsCollapsed   { get; set; } = false;
+
+    private const double CollapsedWidthDip = 20.0;
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool EnumWindows(EnumWindowsProc fn, nint lp);
@@ -63,6 +67,11 @@ public class ExplorerAttachService : IDisposable
         if (_explorerHwnd != nint.Zero) Dispatch(() => SnapSidebar(_explorerHwnd));
     }
 
+    public void RefreshPosition()
+    {
+        if (_explorerHwnd != nint.Zero) Dispatch(() => SnapSidebar(_explorerHwnd));
+    }
+
     public void UpdateWidth(double dipWidth)
     {
         _sidebarWidthDip = dipWidth;
@@ -89,7 +98,8 @@ public class ExplorerAttachService : IDisposable
         else
         {
             NativeMethods.GetWindowThreadProcessId(fg, out uint pid);
-            if ((int)pid != Environment.ProcessId && SidebarIsVisible())
+            if ((int)pid != Environment.ProcessId && SidebarIsVisible()
+                && AutoHide && !IsCollapsed)
                 HideSidebar();
         }
     }
@@ -105,7 +115,7 @@ public class ExplorerAttachService : IDisposable
 
         if (IsExplorerWindow(hwnd))
             Dispatch(() => Track(hwnd));
-        else
+        else if (AutoHide && !IsCollapsed)
             Dispatch(HideSidebar);
     }
 
@@ -158,14 +168,15 @@ public class ExplorerAttachService : IDisposable
     {
         if (!NativeMethods.GetWindowRect(explorerHwnd, out var ex)) return;
         double dpi = DpiScale(explorerHwnd);
+        double w = IsCollapsed ? CollapsedWidthDip : _sidebarWidthDip;
 
         double x = _dockSide == DockSide.Right
             ? ex.Right / dpi
-            : ex.Left  / dpi - _sidebarWidthDip;
+            : ex.Left  / dpi - w;
 
         _sidebar.Left   = x;
         _sidebar.Top    = ex.Top    / dpi;
-        _sidebar.Width  = _sidebarWidthDip;
+        _sidebar.Width  = w;
         _sidebar.Height = ex.Height / dpi;
     }
 

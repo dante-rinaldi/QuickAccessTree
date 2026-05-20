@@ -49,6 +49,7 @@ public partial class MainWindow : Window
         _settings    = settings;
         _attachSvc   = attachSvc;
         _settingsSvc = settingsSvc;
+        attachSvc.AutoHide = settings.AutoHide;
         LoadTree();
         ApplyDockCorners();
     }
@@ -246,19 +247,25 @@ public partial class MainWindow : Window
         {
             OuterBorder.Visibility  = Visibility.Collapsed;
             CollapsedTab.Visibility = Visibility.Visible;
-            // Explicit detach restores Explorer and hides sidebar
-            _attachSvc?.ExplicitDetach();
+            if (_attachSvc != null)
+            {
+                _attachSvc.IsCollapsed = true;
+                _attachSvc.RefreshPosition();
+            }
         }
         else
         {
             CollapsedTab.Visibility = Visibility.Collapsed;
             OuterBorder.Visibility  = Visibility.Visible;
-            // Re-attach to whatever Explorer is open
+            if (_attachSvc != null)
+            {
+                _attachSvc.IsCollapsed = false;
+                _attachSvc.RefreshPosition();
+            }
             _attachSvc?.ForceAttach();
         }
 
-        // Update collapse button arrow direction
-        CollapseBtn.Content = _isCollapsed ? "▶" : "◀";
+        ApplyDockCorners();
     }
 
     // ── Dock corner styling ───────────────────────────────────────────────
@@ -292,11 +299,10 @@ public partial class MainWindow : Window
             : new Thickness(0, 1, 1, 1);
 
         // Collapse/expand arrows flip with dock side
-        // Right-docked: ◀ collapses left,  ▶ expands right
-        // Left-docked:  ▶ collapses right, ◀ expands left
         CollapseBtn.Content = _isCollapsed
             ? (right ? "▶" : "◀")
             : (right ? "◀" : "▶");
+        ExpandBtn.Content = right ? "▶" : "◀";
     }
 
     // ── Add folder ────────────────────────────────────────────────────────
