@@ -251,9 +251,15 @@
                               Background="Transparent"
                               BorderThickness="0"
                               Padding="0,4,0,4"
+                              AllowDrop="True"
                               ItemContainerStyle="{StaticResource FolderItemStyle}"
                               SelectedItemChanged="FolderTree_SelectedItemChanged"
-                              PreviewMouseRightButtonDown="FolderTree_PreviewRightClick">
+                              PreviewMouseRightButtonDown="FolderTree_PreviewRightClick"
+                              PreviewMouseLeftButtonDown="FolderTree_PreviewLeftDown"
+                              PreviewMouseMove="FolderTree_PreviewMouseMove"
+                              DragOver="FolderTree_DragOver"
+                              DragLeave="FolderTree_DragLeave"
+                              Drop="FolderTree_Drop">
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate DataType="{x:Type models:FolderNode}"
                                                       ItemsSource="{Binding Children}">

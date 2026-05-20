@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -53,9 +55,12 @@ public partial class MainWindow : Window
 
     // ── Tree loading ──────────────────────────────────────────────────────
 
+    private readonly Dictionary<string, FolderNode> _nodesByPath =
+        new(StringComparer.OrdinalIgnoreCase);
+
     private void LoadTree()
     {
-        var flat = new List<FolderNode>();
+        var available = new Dictionary<string, FolderNode>(StringComparer.OrdinalIgnoreCase);
 
         if (_settings.ImportQuickAccess)
         {
@@ -63,22 +68,52 @@ public partial class MainWindow : Window
             {
                 if (_settings.RemovedPaths.Contains(n.Path, StringComparer.OrdinalIgnoreCase))
                     continue;
+                if (available.ContainsKey(n.Path)) continue;
                 ApplyColor(n);
-                flat.Add(n);
+                available[n.Path] = n;
             }
         }
 
         foreach (var cf in _settings.CustomFolders)
         {
             if (!Directory.Exists(cf.Path)) continue;
-            if (flat.Any(f => f.Path.Equals(cf.Path, StringComparison.OrdinalIgnoreCase))) continue;
+            if (available.ContainsKey(cf.Path)) continue;
             var n = new FolderNode { Name = cf.DisplayName, Path = cf.Path, IsCustom = true };
             ApplyColor(n);
-            flat.Add(n);
+            available[cf.Path] = n;
         }
 
-        var roots = BuildHierarchy(flat);
-        FolderTree.ItemsSource = new ObservableCollection<FolderNode>(roots);
+        bool placementsChanged = SyncPlacements(available);
+
+        // Unhook handlers from old nodes before we replace the registry
+        foreach (var old in _nodesByPath.Values)
+            old.PropertyChanged -= Node_PropertyChanged;
+        _nodesByPath.Clear();
+        foreach (var kv in available) _nodesByPath[kv.Key] = kv.Value;
+
+        // Build hierarchy by walking Placements in order
+        foreach (var node in available.Values) node.Children.Clear();
+        var roots = new ObservableCollection<FolderNode>();
+        foreach (var p in _settings.Placements)
+        {
+            if (!available.TryGetValue(p.Path, out var node)) continue;
+            if (p.ParentPath != null && available.TryGetValue(p.ParentPath, out var parent))
+                parent.Children.Add(node);
+            else
+                roots.Add(node);
+        }
+
+        // Apply expanded state and hook persistence
+        foreach (var node in available.Values)
+        {
+            if (_settings.ExpandedPaths.TryGetValue(node.Path, out var ex))
+                node.IsExpanded = ex;
+            node.PropertyChanged += Node_PropertyChanged;
+        }
+
+        FolderTree.ItemsSource = roots;
+
+        if (placementsChanged) _settingsSvc.Save(_settings);
     }
 
     private void ApplyColor(FolderNode n)
@@ -87,42 +122,70 @@ public partial class MainWindow : Window
             n.Color = c;
     }
 
-    /// <summary>
-    /// Organises a flat list of folders into a tree using path ancestry.
-    /// Only folders that are already in the list become children — we never
-    /// auto-expand the filesystem.
-    /// </summary>
-    private static List<FolderNode> BuildHierarchy(List<FolderNode> flat)
+    private void Node_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Work on a copy sorted shortest-path-first so parents are placed before children
-        var sorted = flat.OrderBy(f => f.Path.Length).ThenBy(f => f.Path).ToList();
-        var placed = new List<FolderNode>();
-        var roots  = new List<FolderNode>();
+        if (e.PropertyName != nameof(FolderNode.IsExpanded)) return;
+        if (sender is not FolderNode n) return;
+        _settings.ExpandedPaths[n.Path] = n.IsExpanded;
+        _settingsSvc.Save(_settings);
+    }
 
-        foreach (var node in sorted)
+    /// <summary>
+    /// Drops placements for paths that no longer exist, appends new folders with
+    /// parents inferred from path ancestry, and rebinds orphaned children to the
+    /// nearest still-existing ancestor.
+    /// </summary>
+    private bool SyncPlacements(Dictionary<string, FolderNode> available)
+    {
+        bool changed = false;
+
+        int removed = _settings.Placements.RemoveAll(p => !available.ContainsKey(p.Path));
+        if (removed > 0) changed = true;
+
+        var placed = new HashSet<string>(
+            _settings.Placements.Select(p => p.Path),
+            StringComparer.OrdinalIgnoreCase);
+
+        // Append unplaced folders. Sort shortest-first so parents land in
+        // `placed` before their would-be children look for an ancestor.
+        foreach (var path in available.Keys
+                     .Where(k => !placed.Contains(k))
+                     .OrderBy(k => k.Length))
         {
-            // Find the deepest already-placed folder that is a direct ancestor
-            FolderNode? best = null;
-            foreach (var candidate in placed)
-            {
-                string cp = candidate.Path.TrimEnd('\\', '/');
-                if (node.Path.StartsWith(cp + "\\", StringComparison.OrdinalIgnoreCase) ||
-                    node.Path.StartsWith(cp + "/",  StringComparison.OrdinalIgnoreCase))
-                {
-                    if (best == null || candidate.Path.Length > best.Path.Length)
-                        best = candidate;
-                }
-            }
-
-            if (best != null)
-                best.Children.Add(node);
-            else
-                roots.Add(node);
-
-            placed.Add(node);
+            string? parent = FindAncestorIn(path, placed);
+            _settings.Placements.Add(new FolderPlacement { Path = path, ParentPath = parent });
+            placed.Add(path);
+            changed = true;
         }
 
-        return roots;
+        // Reparent any placement whose parent is gone
+        foreach (var p in _settings.Placements)
+        {
+            if (p.ParentPath == null) continue;
+            if (placed.Contains(p.ParentPath)) continue;
+            p.ParentPath = FindAncestorIn(p.Path, placed, excluding: p.Path);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private static string? FindAncestorIn(
+        string path, IEnumerable<string> candidates, string? excluding = null)
+    {
+        string? best = null;
+        foreach (var c in candidates)
+        {
+            if (excluding != null && c.Equals(excluding, StringComparison.OrdinalIgnoreCase))
+                continue;
+            var trimmed = c.TrimEnd('\\', '/');
+            if (path.StartsWith(trimmed + "\\", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(trimmed + "/",  StringComparison.OrdinalIgnoreCase))
+            {
+                if (best == null || c.Length > best.Length) best = c;
+            }
+        }
+        return best;
     }
 
     // ── Folder selection → navigate Explorer ──────────────────────────────
@@ -245,6 +308,173 @@ public partial class MainWindow : Window
         _settings.CustomFolders.Add(new CustomFolder { Path = path, DisplayName = name });
         _settingsSvc.Save(_settings);
         LoadTree();
+    }
+
+    // ── Drag and drop reorder/reparent ────────────────────────────────────
+
+    private Point          _dragStart;
+    private FolderNode?    _dragCandidate;
+    private DropAdorner?   _dropAdorner;
+    private Border?        _dropAdornerTarget;
+
+    private void FolderTree_PreviewLeftDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragStart = e.GetPosition(null);
+        var tvi = (e.OriginalSource as DependencyObject)?.FindAncestorOrSelf<TreeViewItem>();
+        _dragCandidate = tvi?.DataContext as FolderNode;
+    }
+
+    private void FolderTree_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _dragCandidate == null) return;
+        var pos = e.GetPosition(null);
+        if (Math.Abs(pos.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(pos.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+        var node = _dragCandidate;
+        _dragCandidate = null;
+        DragDrop.DoDragDrop(FolderTree, node, DragDropEffects.Move);
+        RemoveDropAdorner();
+    }
+
+    private void FolderTree_DragOver(object sender, DragEventArgs e)
+    {
+        if (TryResolveDropTarget(e, out var tvi, out var zone) &&
+            tvi!.DataContext is FolderNode tNode &&
+            e.Data.GetData(typeof(FolderNode)) is FolderNode sNode &&
+            IsValidDrop(sNode, tNode))
+        {
+            e.Effects = DragDropEffects.Move;
+            ShowDropAdorner(tvi, zone);
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+            RemoveDropAdorner();
+        }
+        e.Handled = true;
+    }
+
+    private void FolderTree_DragLeave(object sender, DragEventArgs e) => RemoveDropAdorner();
+
+    private void FolderTree_Drop(object sender, DragEventArgs e)
+    {
+        RemoveDropAdorner();
+        if (!TryResolveDropTarget(e, out var tvi, out var zone)) return;
+        if (tvi!.DataContext is not FolderNode tNode) return;
+        if (e.Data.GetData(typeof(FolderNode)) is not FolderNode sNode) return;
+        if (!IsValidDrop(sNode, tNode)) return;
+
+        ApplyDrop(sNode, tNode, zone);
+        _settingsSvc.Save(_settings);
+        LoadTree();
+        e.Handled = true;
+    }
+
+    private bool TryResolveDropTarget(DragEventArgs e, out TreeViewItem? tvi, out DropZone zone)
+    {
+        zone = DropZone.None;
+        tvi = (e.OriginalSource as DependencyObject)?.FindAncestorOrSelf<TreeViewItem>();
+        if (tvi == null) return false;
+        if (tvi.Template.FindName("Row", tvi) is not Border row) return false;
+
+        var rowPos = e.GetPosition(row);
+        double h = row.ActualHeight;
+        if (h <= 0) return false;
+
+        double ratio = rowPos.Y / h;
+        zone = ratio < 0.3 ? DropZone.Before
+             : ratio < 0.7 ? DropZone.Into
+             : DropZone.After;
+        return true;
+    }
+
+    private bool IsValidDrop(FolderNode source, FolderNode target)
+    {
+        if (ReferenceEquals(source, target)) return false;
+        if (source.Path.Equals(target.Path, StringComparison.OrdinalIgnoreCase)) return false;
+        // Walk target's parent chain — if we hit source, dropping would create a cycle
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string? current = target.Path;
+        while (current != null && seen.Add(current))
+        {
+            var p = _settings.Placements.FirstOrDefault(
+                x => x.Path.Equals(current, StringComparison.OrdinalIgnoreCase));
+            if (p?.ParentPath == null) return true;
+            if (p.ParentPath.Equals(source.Path, StringComparison.OrdinalIgnoreCase)) return false;
+            current = p.ParentPath;
+        }
+        return true;
+    }
+
+    private void ApplyDrop(FolderNode source, FolderNode target, DropZone zone)
+    {
+        var list = _settings.Placements;
+        int srcIdx = list.FindIndex(p => p.Path.Equals(source.Path, StringComparison.OrdinalIgnoreCase));
+        int tgtIdx = list.FindIndex(p => p.Path.Equals(target.Path, StringComparison.OrdinalIgnoreCase));
+        if (srcIdx < 0 || tgtIdx < 0) return;
+
+        var sp = list[srcIdx];
+        list.RemoveAt(srcIdx);
+        if (srcIdx < tgtIdx) tgtIdx--;
+
+        int insertAt;
+        string? newParent;
+        switch (zone)
+        {
+            case DropZone.Before:
+                insertAt = tgtIdx;
+                newParent = list[tgtIdx].ParentPath;
+                break;
+            case DropZone.After:
+                insertAt = tgtIdx + 1;
+                newParent = list[tgtIdx].ParentPath;
+                break;
+            case DropZone.Into:
+                newParent = target.Path;
+                // Insert as last direct child of target
+                insertAt = tgtIdx + 1;
+                for (int i = tgtIdx + 1; i < list.Count; i++)
+                {
+                    if (list[i].ParentPath != null &&
+                        list[i].ParentPath!.Equals(target.Path, StringComparison.OrdinalIgnoreCase))
+                        insertAt = i + 1;
+                }
+                break;
+            default:
+                list.Insert(srcIdx, sp);
+                return;
+        }
+
+        sp.ParentPath = newParent;
+        list.Insert(insertAt, sp);
+    }
+
+    private void ShowDropAdorner(TreeViewItem tvi, DropZone zone)
+    {
+        if (tvi.Template.FindName("Row", tvi) is not Border row) return;
+        if (!ReferenceEquals(_dropAdornerTarget, row))
+        {
+            RemoveDropAdorner();
+            var layer = AdornerLayer.GetAdornerLayer(row);
+            if (layer == null) return;
+            _dropAdorner = new DropAdorner(row);
+            layer.Add(_dropAdorner);
+            _dropAdornerTarget = row;
+        }
+        _dropAdorner!.Zone = zone;
+        _dropAdorner.InvalidateVisual();
+    }
+
+    private void RemoveDropAdorner()
+    {
+        if (_dropAdorner != null && _dropAdornerTarget != null)
+        {
+            var layer = AdornerLayer.GetAdornerLayer(_dropAdornerTarget);
+            layer?.Remove(_dropAdorner);
+        }
+        _dropAdorner = null;
+        _dropAdornerTarget = null;
     }
 
     // ── Context menu ──────────────────────────────────────────────────────
@@ -370,6 +600,8 @@ public partial class MainWindow : Window
     }
 }
 
+internal enum DropZone { None, Before, Into, After }
+
 // ── Visual tree extension ─────────────────────────────────────────────────
 
 internal static class VisualExtensions
@@ -383,4 +615,39 @@ internal static class VisualExtensions
         }
         return null;
     }
+}
+
+// ── Drop-zone visual ──────────────────────────────────────────────────────
+
+internal class DropAdorner : Adorner
+{
+    private static readonly Pen   LinePen  = MakeFrozen(new Pen(Brushes.DodgerBlue, 2));
+    private static readonly Brush IntoFill = MakeFrozen(new SolidColorBrush(Color.FromArgb(80, 30, 144, 255)));
+
+    public DropZone Zone { get; set; }
+
+    public DropAdorner(UIElement adornedElement) : base(adornedElement)
+    {
+        IsHitTestVisible = false;
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        double w = AdornedElement.RenderSize.Width;
+        double h = AdornedElement.RenderSize.Height;
+        switch (Zone)
+        {
+            case DropZone.Before:
+                dc.DrawLine(LinePen, new Point(0, 0), new Point(w, 0));
+                break;
+            case DropZone.After:
+                dc.DrawLine(LinePen, new Point(0, h), new Point(w, h));
+                break;
+            case DropZone.Into:
+                dc.DrawRectangle(IntoFill, null, new Rect(0, 0, w, h));
+                break;
+        }
+    }
+
+    private static T MakeFrozen<T>(T f) where T : Freezable { f.Freeze(); return f; }
 }
