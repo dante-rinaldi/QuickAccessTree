@@ -170,16 +170,18 @@ public class ExplorerAttachService : IDisposable
 
     private void ShowSidebar()
     {
+        // WPF must be Visible for it to render into the HWND. A bare Win32
+        // ShowWindow won't bring rendering back after Window.Hide().
+        _sidebar.Visibility = Visibility.Visible;
+
         var helper = new WindowInteropHelper(_sidebar);
         nint hwnd = helper.Handle;
         if (hwnd == nint.Zero) return;
 
-        // SetWindowPos HWND_TOPMOST + SWP_SHOWWINDOW
         NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST,
             0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
             | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
-        NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOW);
     }
 
     private void HideSidebar()
@@ -189,6 +191,7 @@ public class ExplorerAttachService : IDisposable
             0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
             | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_HIDEWINDOW);
+        _sidebar.Visibility = Visibility.Hidden;
     }
 
     private bool SidebarIsVisible()
