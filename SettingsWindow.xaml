@@ -262,39 +262,47 @@
                         <RadioButton x:Name="RbColorPerFolder"
                                      Content="Per folder only"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="ColorMode"/>
+                                     GroupName="ColorMode"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbColorCascade"
                                      Content="Cascade color to all subfolders"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="ColorMode"/>
+                                     GroupName="ColorMode"
+                                     Checked="Setting_Changed"/>
 
                         <TextBlock Text="SIDEBAR BEHAVIOR" Style="{StaticResource SectionLabel}"/>
                         <RadioButton x:Name="RbStayVisible"
                                      Content="Stay visible (always on screen)"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="AutoHide"/>
+                                     GroupName="AutoHide"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbAutoHide"
                                      Content="Auto-hide with Explorer"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="AutoHide"/>
+                                     GroupName="AutoHide"
+                                     Checked="Setting_Changed"/>
 
                         <TextBlock Text="VISIBILITY DELAY" Style="{StaticResource SectionLabel}"/>
                         <RadioButton x:Name="RbDelayInstant"
                                      Content="Instant"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Delay"/>
+                                     GroupName="Delay"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbDelayHalf"
                                      Content="0.5 seconds"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Delay"/>
+                                     GroupName="Delay"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbDelayTwo"
                                      Content="2 seconds"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Delay"/>
+                                     GroupName="Delay"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbDelayFive"
                                      Content="5 seconds"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Delay"/>
+                                     GroupName="Delay"
+                                     Checked="Setting_Changed"/>
 
                         <TextBlock Text="DEFAULT DOCK SIDE" Style="{StaticResource SectionLabel}"/>
                         <StackPanel Orientation="Horizontal">
@@ -302,20 +310,42 @@
                                          Content="Left"
                                          Style="{StaticResource SettingsRadio}"
                                          GroupName="DockSide"
-                                         Margin="0,3,20,0"/>
+                                         Margin="0,3,20,0"
+                                         Checked="Setting_Changed"/>
                             <RadioButton x:Name="RbDockRight"
                                          Content="Right"
                                          Style="{StaticResource SettingsRadio}"
-                                         GroupName="DockSide"/>
+                                         GroupName="DockSide"
+                                         Checked="Setting_Changed"/>
                         </StackPanel>
 
                         <TextBlock Text="BEHAVIOR" Style="{StaticResource SectionLabel}"/>
                         <CheckBox x:Name="CbStartup"
                                   Content="Launch on startup"
-                                  Style="{StaticResource SettingsCheck}"/>
+                                  Style="{StaticResource SettingsCheck}"
+                                  Click="Setting_Changed"/>
                         <CheckBox x:Name="CbRestoreExpanded"
                                   Content="Restore expanded state on launch"
-                                  Style="{StaticResource SettingsCheck}"/>
+                                  Style="{StaticResource SettingsCheck}"
+                                  Click="Setting_Changed"/>
+
+                        <TextBlock Text="ADD FOLDER BUTTON" Style="{StaticResource SectionLabel}"/>
+                        <RadioButton x:Name="RbAddCurrent"
+                                     Content="Add current Explorer folder instantly"
+                                     Style="{StaticResource SettingsRadio}"
+                                     GroupName="AddFolder"
+                                     Checked="Setting_Changed"/>
+                        <RadioButton x:Name="RbAddBrowse"
+                                     Content="Open folder browser dialog"
+                                     Style="{StaticResource SettingsRadio}"
+                                     GroupName="AddFolder"
+                                     Checked="Setting_Changed"/>
+
+                        <TextBlock Text="FOLDER NESTING" Style="{StaticResource SectionLabel}"/>
+                        <CheckBox x:Name="CbAutoNest"
+                                  Content="Auto-nest folders under parent paths"
+                                  Style="{StaticResource SettingsCheck}"
+                                  Click="Setting_Changed"/>
                     </StackPanel>
 
                     <!-- ── Appearance ──────────────────────────────────── -->
@@ -328,15 +358,18 @@
                         <RadioButton x:Name="RbThemeSystem"
                                      Content="Follow system"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Theme"/>
+                                     GroupName="Theme"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbThemeDark"
                                      Content="Dark"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Theme"/>
+                                     GroupName="Theme"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbThemeLight"
                                      Content="Light"
                                      Style="{StaticResource SettingsRadio}"
-                                     GroupName="Theme"/>
+                                     GroupName="Theme"
+                                     Checked="Setting_Changed"/>
 
                         <TextBlock Text="SKIN" Style="{StaticResource SectionLabel}"/>
                         <TextBlock Text="Skins change the visual style of the sidebar."
@@ -346,7 +379,8 @@
                                  BorderBrush="#3C3C3C"
                                  BorderThickness="1"
                                  MaxHeight="190"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 SelectionChanged="Skin_Changed">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource SkinItem}"/>
                             </ListBox.ItemContainerStyle>
@@ -434,20 +468,13 @@
                     CornerRadius="0,0,8,8"
                     BorderBrush="#3C3C3C"
                     BorderThickness="0,1,0,0">
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Margin="0,0,16,0">
-                    <Button Content="Cancel"
-                            Style="{StaticResource DarkBtn}"
-                            Width="76"
-                            Margin="0,0,8,0"
-                            Click="Cancel_Click"/>
-                    <Button Content="OK"
-                            Style="{StaticResource AccentBtn}"
-                            Width="76"
-                            Click="OK_Click"/>
-                </StackPanel>
+                <Button Content="Close"
+                        Style="{StaticResource DarkBtn}"
+                        Width="76"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,16,0"
+                        Click="Close_Click"/>
             </Border>
         </Grid>
     </Border>

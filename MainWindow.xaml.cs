@@ -170,7 +170,7 @@ public partial class MainWindow : Window
                      .Where(k => !placed.Contains(k))
                      .OrderBy(k => k.Length))
         {
-            string? parent = FindAncestorIn(path, placed);
+            string? parent = _settings.AutoNestFolders ? FindAncestorIn(path, placed) : null;
             _settings.Placements.Add(new FolderPlacement { Path = path, ParentPath = parent });
             placed.Add(path);
             changed = true;
@@ -312,27 +312,85 @@ public partial class MainWindow : Window
 
     private void AddFolder()
     {
-        using var dlg = new System.Windows.Forms.FolderBrowserDialog
-        {
-            Description           = "Select a folder to add",
-            UseDescriptionForTitle = true,
-        };
-        if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+        string? path;
 
-        string path = dlg.SelectedPath;
+        if (_settings.AddFolderBehavior == AddFolderMode.CurrentFolder)
+        {
+            path = _attachSvc?.GetCurrentExplorerPath();
+            if (string.IsNullOrEmpty(path))
+            {
+                // Fallback to dialog if no Explorer attached or path unavailable
+                path = BrowseForFolder();
+                if (path == null) return;
+            }
+        }
+        else
+        {
+            path = BrowseForFolder();
+            if (path == null) return;
+        }
+
         if (!Directory.Exists(path)) return;
 
-        if (FolderTree.ItemsSource is ObservableCollection<FolderNode> roots &&
-            roots.Any(r => r.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
+        if (_settings.CustomFolders.Any(
+                f => f.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
             return;
 
         string name = System.IO.Path.GetFileName(path);
-        var node = new FolderNode { Name = name, Path = path, IsCustom = true };
-
-        // Re-load tree so the hierarchy is recalculated
         _settings.CustomFolders.Add(new CustomFolder { Path = path, DisplayName = name });
         _settingsSvc.Save(_settings);
         LoadTree();
+    }
+
+    private static string? BrowseForFolder()
+    {
+        using var dlg = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description            = "Select a folder to add",
+            UseDescriptionForTitle = true,
+        };
+        return dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK
+            ? dlg.SelectedPath : null;
+    }
+
+    // ── Click-to-focus Explorer ───────────────────────────────────────────
+
+    private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        => _attachSvc?.FocusExplorer();
+
+    // ── Header drag → move Explorer ───────────────────────────────────────
+
+    private bool  _headerDragging;
+    private Point _headerDragOrigin;   // screen pixels at drag start
+
+    private void Header_DragStart(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        // Don't start drag if a button inside the header was clicked
+        if (e.OriginalSource is System.Windows.Controls.Button ||
+            (e.OriginalSource as System.Windows.FrameworkElement)
+                ?.FindAncestorOrSelf<System.Windows.Controls.Button>() != null)
+            return;
+        _headerDragging   = true;
+        _headerDragOrigin = PointToScreen(e.GetPosition(this));
+        HeaderBorder.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void Header_DragMove(object sender, MouseEventArgs e)
+    {
+        if (!_headerDragging || e.LeftButton != MouseButtonState.Pressed) return;
+        Point current = PointToScreen(e.GetPosition(this));
+        double dx = current.X - _headerDragOrigin.X;
+        double dy = current.Y - _headerDragOrigin.Y;
+        _headerDragOrigin = current;
+        _attachSvc?.MoveExplorer(dx, dy);
+    }
+
+    private void Header_DragEnd(object sender, MouseButtonEventArgs e)
+    {
+        _headerDragging = false;
+        HeaderBorder.ReleaseMouseCapture();
     }
 
     // ── Drag and drop reorder/reparent ────────────────────────────────────

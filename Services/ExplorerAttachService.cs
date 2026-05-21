@@ -21,6 +21,7 @@ public class ExplorerAttachService : IDisposable
     private nint _explorerHwnd;
     private System.Timers.Timer?        _pollTimer;
     private CancellationTokenSource?    _showCts;
+    private bool                        _showPending;
 
     public double ShowDelaySecs { get; set; } = 0;
     public bool   AutoHide      { get; set; } = false;
@@ -186,44 +187,54 @@ public class ExplorerAttachService : IDisposable
     {
         if (!immediate && ShowDelaySecs > 0)
         {
+            if (_showPending) return;  // countdown already running — don't restart it
+            _showPending = true;
             _showCts?.Cancel();
             _showCts?.Dispose();
             _showCts = new CancellationTokenSource();
             var token = _showCts.Token;
             _ = Task.Delay(TimeSpan.FromSeconds(ShowDelaySecs), token)
-                    .ContinueWith(_ => Dispatch(ShowSidebarNow),
+                    .ContinueWith(_ => Dispatch(() => { _showPending = false; ShowSidebarNow(); }),
                         CancellationToken.None,
                         TaskContinuationOptions.OnlyOnRanToCompletion,
                         TaskScheduler.Default);
             return;
         }
+        _showPending = false;
         ShowSidebarNow();
     }
 
     private void ShowSidebarNow()
     {
-        // WPF must be Visible for it to render into the HWND. A bare Win32
-        // ShowWindow won't bring rendering back after Window.Hide().
+        // WPF must be Visible for it to render into the HWND.
         _sidebar.Visibility = Visibility.Visible;
 
         var helper = new WindowInteropHelper(_sidebar);
         nint hwnd = helper.Handle;
         if (hwnd == nint.Zero) return;
 
-        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST,
+        // Bring sidebar to the top of the non-topmost stack (same level as Explorer)
+        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOP,
             0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
             | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+
+        // Place Explorer immediately below the sidebar in z-order
+        if (_explorerHwnd != nint.Zero)
+            NativeMethods.SetWindowPos(_explorerHwnd, hwnd, 0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
     }
 
     private void HideSidebar()
     {
+        _showPending = false;
         _showCts?.Cancel();
         var helper = new WindowInteropHelper(_sidebar);
-        NativeMethods.SetWindowPos(helper.Handle, NativeMethods.HWND_NOTOPMOST,
+        NativeMethods.SetWindowPos(helper.Handle, nint.Zero,
             0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
-            | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_HIDEWINDOW);
+            | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE
+            | NativeMethods.SWP_HIDEWINDOW);
         _sidebar.Visibility = Visibility.Hidden;
     }
 
@@ -231,6 +242,48 @@ public class ExplorerAttachService : IDisposable
     {
         var helper = new WindowInteropHelper(_sidebar);
         return helper.Handle != nint.Zero && NativeMethods.IsWindowVisible(helper.Handle);
+    }
+
+    // ── Explorer interaction ──────────────────────────────────────────────
+
+    public void FocusExplorer()
+    {
+        if (_explorerHwnd != nint.Zero && NativeMethods.IsWindow(_explorerHwnd))
+            NativeMethods.SetForegroundWindow(_explorerHwnd);
+    }
+
+    // deltaX/deltaY are in physical (screen) pixels
+    public void MoveExplorer(double deltaX, double deltaY)
+    {
+        if (_explorerHwnd == nint.Zero) return;
+        if (!NativeMethods.GetWindowRect(_explorerHwnd, out var r)) return;
+        NativeMethods.SetWindowPos(_explorerHwnd, nint.Zero,
+            (int)(r.Left + deltaX), (int)(r.Top + deltaY), 0, 0,
+            NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+    }
+
+    public string? GetCurrentExplorerPath()
+    {
+        try
+        {
+            Type? t = Type.GetTypeFromCLSID(ShellWindowsCLSID);
+            if (t == null) return null;
+            dynamic sw = Activator.CreateInstance(t)!;
+            int count = (int)sw.Count;
+            for (int i = 0; i < count; i++)
+            {
+                dynamic? w = sw.Item(i);
+                if (w == null) continue;
+                try
+                {
+                    if ((nint)(int)w.HWND == _explorerHwnd)
+                        return (string)w.Document.Folder.Self.Path;
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return null;
     }
 
     // ── Navigation ────────────────────────────────────────────────────────

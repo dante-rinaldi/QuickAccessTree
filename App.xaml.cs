@@ -4,6 +4,7 @@ using SidebarBuddy.Interop;
 using SidebarBuddy.Models;
 using SidebarBuddy.Services;
 using Forms = System.Windows.Forms;
+using ThemeManager = SidebarBuddy.Services.ThemeManager;
 
 namespace SidebarBuddy;
 
@@ -31,6 +32,7 @@ public partial class App : System.Windows.Application
 
         base.OnStartup(e);
         Settings = _settingsService.Load();
+        ThemeManager.Apply(Settings.Theme);
 
         _mainWindow = new MainWindow();
 

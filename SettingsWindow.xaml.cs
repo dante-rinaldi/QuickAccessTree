@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using SidebarBuddy.Models;
@@ -8,16 +8,17 @@ namespace SidebarBuddy;
 
 public partial class SettingsWindow : Window
 {
-    private readonly AppSettings           _settings;
-    private readonly SettingsService       _settingsSvc;
+    private readonly AppSettings            _settings;
+    private readonly SettingsService        _settingsSvc;
     private readonly ExplorerAttachService? _attachSvc;
-    private readonly Action?               _onApplied;
+    private readonly Action?                _onApplied;
+    private bool _loading;
 
     public SettingsWindow(
-        AppSettings           settings,
-        SettingsService       settingsSvc,
+        AppSettings            settings,
+        SettingsService        settingsSvc,
         ExplorerAttachService? attachSvc,
-        Action?               onApplied)
+        Action?                onApplied)
     {
         _settings    = settings;
         _settingsSvc = settingsSvc;
@@ -33,6 +34,8 @@ public partial class SettingsWindow : Window
 
     private void PopulateValues()
     {
+        _loading = true;
+
         // General — color inheritance
         RbColorPerFolder.IsChecked = _settings.ColorInheritance == ColorInheritanceMode.PerFolder;
         RbColorCascade.IsChecked   = _settings.ColorInheritance == ColorInheritanceMode.Cascade;
@@ -52,8 +55,15 @@ public partial class SettingsWindow : Window
         RbDockRight.IsChecked = _settings.DockSide == DockSide.Right;
 
         // General — behavior
-        CbStartup.IsChecked        = _settingsSvc.GetLaunchOnStartup();
+        CbStartup.IsChecked         = _settingsSvc.GetLaunchOnStartup();
         CbRestoreExpanded.IsChecked = _settings.RestoreExpandedState;
+
+        // General — add folder mode
+        RbAddCurrent.IsChecked = _settings.AddFolderBehavior == AddFolderMode.CurrentFolder;
+        RbAddBrowse.IsChecked  = _settings.AddFolderBehavior == AddFolderMode.BrowseDialog;
+
+        // General — folder nesting
+        CbAutoNest.IsChecked = _settings.AutoNestFolders;
 
         // Appearance — theme
         RbThemeSystem.IsChecked = _settings.Theme == ThemeMode.System;
@@ -67,6 +77,8 @@ public partial class SettingsWindow : Window
 
         // License
         RefreshLicensePanel();
+
+        _loading = false;
     }
 
     private void RefreshLicensePanel()
@@ -103,23 +115,21 @@ public partial class SettingsWindow : Window
         PanelLicense.Visibility    = tag == "License"    ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // ── Commands ──────────────────────────────────────────────────────
+    // ── Live-apply ────────────────────────────────────────────────────
 
-    private void Header_MouseDown(object sender, MouseButtonEventArgs e)
+    private void Setting_Changed(object sender, RoutedEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+        if (_loading) return;
+        LiveApply();
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e)  => Close();
-    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
-
-    private void OK_Click(object sender, RoutedEventArgs e)
+    private void Skin_Changed(object sender, SelectionChangedEventArgs e)
     {
-        ApplySettings();
-        Close();
+        if (_loading) return;
+        LiveApply();
     }
 
-    private void ApplySettings()
+    private void LiveApply()
     {
         // Color inheritance
         _settings.ColorInheritance = RbColorCascade.IsChecked == true
@@ -139,15 +149,24 @@ public partial class SettingsWindow : Window
 
         // Behavior
         _settings.RestoreExpandedState = CbRestoreExpanded.IsChecked == true;
+        _settings.AutoNestFolders      = CbAutoNest.IsChecked == true;
+
         bool startup = CbStartup.IsChecked == true;
         _settings.LaunchOnStartup = startup;
         _settingsSvc.SetLaunchOnStartup(startup);
 
-        // Appearance
-        _settings.Theme = RbThemeLight.IsChecked  == true ? ThemeMode.Light
-                        : RbThemeDark.IsChecked   == true ? ThemeMode.Dark
-                        : ThemeMode.System;
+        // Add folder mode
+        _settings.AddFolderBehavior = RbAddBrowse.IsChecked == true
+            ? AddFolderMode.BrowseDialog : AddFolderMode.CurrentFolder;
 
+        // Appearance — theme
+        ThemeMode newTheme = RbThemeLight.IsChecked == true ? ThemeMode.Light
+                           : RbThemeDark.IsChecked  == true ? ThemeMode.Dark
+                           : ThemeMode.System;
+        _settings.Theme = newTheme;
+        ThemeManager.Apply(newTheme);
+
+        // Appearance — skin
         if (SkinList.SelectedIndex >= 0)
             _settings.Skin = (AppSkin)SkinList.SelectedIndex;
 
@@ -171,13 +190,22 @@ public partial class SettingsWindow : Window
         _                     => 0.0,
     };
 
+    // ── Commands ──────────────────────────────────────────────────────
+
+    private void Header_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
     // ── License ───────────────────────────────────────────────────────
 
     private void BuyNow_Click(object sender, RoutedEventArgs e)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
-            FileName        = "https://example.com/buy",   // placeholder — replace with real URL
+            FileName        = "https://sidebarbuddy.com/buy",
             UseShellExecute = true
         });
     }
