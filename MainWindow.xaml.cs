@@ -269,7 +269,7 @@ public partial class MainWindow : Window
 
     private void RemoveBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_selectedNodes.Count > 1)
+        if (_selectedNodes.Count > 0)
         {
             BatchRemove(_selectedNodes.ToList());
             ClearMultiSelection();
@@ -560,18 +560,15 @@ public partial class MainWindow : Window
             var (label, path) = QuickLinkDefs[i];
             var btn = new Button
             {
-                Content                    = label,
-                Tag                        = path,
-                HorizontalAlignment        = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                Height          = 24,
-                Margin          = new Thickness(0, 1, 0, 1),
-                Cursor          = Cursors.Hand,
-                Background      = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Foreground      = TryFindResource("Theme.SecondaryText") as Brush ?? Brushes.LightGray,
-                FontSize        = 11,
-                Padding         = new Thickness(8, 0, 0, 0),
+                Content             = label,
+                Tag                 = path,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Height              = 24,
+                Margin              = new Thickness(0, 1, 0, 1),
+                Foreground          = TryFindResource("Theme.SecondaryText") as Brush ?? Brushes.LightGray,
+                FontSize            = 11,
+                Padding             = new Thickness(8, 0, 0, 0),
+                Style               = TryFindResource("QuickLinkBtn") as Style,
             };
             btn.Click += QuickLink_Click;
             target.Children.Add(btn);
@@ -580,8 +577,20 @@ public partial class MainWindow : Window
 
     private void QuickLink_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string path })
-            _attachSvc?.NavigateTo(path);
+        if (sender is not Button { Tag: string path }) return;
+        // Control Panel can't navigate via Explorer's Navigate2 on Windows 11 — open standalone.
+        // Suppress new-window tracking first so Control Panel's CabinetWClass window doesn't
+        // steal _explorerHwnd and move the sidebar away from Explorer.
+        if (path.Contains("26EE0668", StringComparison.OrdinalIgnoreCase))
+        {
+            _attachSvc?.SuppressNewWindowTracking();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "control.exe", UseShellExecute = true
+            });
+            return;
+        }
+        _attachSvc?.NavigateTo(path);
     }
 
     // ── Header drag → move Explorer ───────────────────────────────────────
@@ -635,6 +644,15 @@ public partial class MainWindow : Window
         bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
         if (_dragCandidate != null && ctrl)
         {
+            // On the very first Ctrl+click, pull the current TreeView selection into the
+            // multi-select set so the user doesn't have to Ctrl+click it separately.
+            if (_selectedNodes.Count == 0 && FolderTree.SelectedItem is FolderNode current
+                && current != _dragCandidate)
+            {
+                current.IsMultiSelected = true;
+                _selectedNodes.Add(current);
+            }
+
             if (_dragCandidate.IsMultiSelected)
             {
                 _dragCandidate.IsMultiSelected = false;
@@ -664,7 +682,7 @@ public partial class MainWindow : Window
     // or just the single context node.
     private List<FolderNode> GetEffectiveTargetNodes()
     {
-        if (_contextNode != null && _selectedNodes.Count > 1 && _selectedNodes.Contains(_contextNode))
+        if (_contextNode != null && _selectedNodes.Count > 0 && _selectedNodes.Contains(_contextNode))
             return _selectedNodes.ToList();
         return _contextNode != null ? new List<FolderNode> { _contextNode } : new List<FolderNode>();
     }

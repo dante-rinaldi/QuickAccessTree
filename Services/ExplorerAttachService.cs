@@ -22,6 +22,7 @@ public class ExplorerAttachService : IDisposable
     private System.Timers.Timer?        _pollTimer;
     private CancellationTokenSource?    _showCts;
     private bool                        _showPending;
+    private long                        _suppressNewTrackingUntil; // Environment.TickCount64
 
     public double ShowDelaySecs { get; set; } = 0;
     public bool   AutoHide      { get; set; } = false;
@@ -62,6 +63,15 @@ public class ExplorerAttachService : IDisposable
         _pollTimer.Start();
     }
 
+    // Prevent switching to a newly-opened Explorer-class window for a short time.
+    // Used before launching Control Panel so it doesn't hijack _explorerHwnd.
+    public void SuppressNewWindowTracking(int milliseconds = 3000)
+        => Interlocked.Exchange(ref _suppressNewTrackingUntil,
+               Environment.TickCount64 + milliseconds);
+
+    private bool IsNewWindowSuppressed()
+        => Environment.TickCount64 < Interlocked.Read(ref _suppressNewTrackingUntil);
+
     public void UpdateDockSide(DockSide side)
     {
         _dockSide = side;
@@ -100,7 +110,12 @@ public class ExplorerAttachService : IDisposable
         if (IsExplorerWindow(fg))
         {
             if (fg != _explorerHwnd)
-                Track(fg);
+            {
+                if (!IsNewWindowSuppressed())
+                    Track(fg);
+                else
+                    BringAboveExplorer(); // keep z-order while suppression is active
+            }
             else if (!SidebarIsVisible())
                 ShowSidebar(immediate: false);
             else
@@ -125,7 +140,12 @@ public class ExplorerAttachService : IDisposable
         if ((int)pid == Environment.ProcessId) return;
 
         if (IsExplorerWindow(hwnd))
-            Dispatch(() => Track(hwnd));
+        {
+            // Don't let Control Panel (or other shell windows) steal _explorerHwnd right
+            // after we launched them — caller sets a brief suppression window first.
+            if (hwnd == _explorerHwnd || !IsNewWindowSuppressed())
+                Dispatch(() => Track(hwnd));
+        }
         else if (AutoHide && !IsCollapsed)
             Dispatch(HideSidebar);
     }
@@ -378,6 +398,7 @@ public class ExplorerAttachService : IDisposable
         NativeMethods.GetClassName(hwnd, sb, sb.Capacity);
         return sb.ToString() is "CabinetWClass" or "ExploreWClass";
     }
+
 
     private static double DpiScale(nint hwnd)
     {

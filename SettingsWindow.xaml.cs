@@ -25,6 +25,7 @@ public partial class SettingsWindow : Window
         _attachSvc   = attachSvc;
         _onApplied   = onApplied;
 
+        _loading = true;
         InitializeComponent();
         PopulateValues();
         NavList.SelectedIndex = 0;
