@@ -77,9 +77,21 @@
                                                   ClickMode="Press"
                                                   Visibility="Hidden"/>
 
+                                    <!-- Color indicator shown on group headers when a color is set -->
+                                    <Border x:Name="GroupColorBar"
+                                            Grid.Column="1"
+                                            Width="{DynamicResource Theme.IconWidth}"
+                                            Height="{DynamicResource Theme.IconHeight}"
+                                            CornerRadius="3"
+                                            Visibility="Collapsed"
+                                            Background="{Binding Color,
+                                                Converter={StaticResource ColorToBrush}}"
+                                            VerticalAlignment="Center"/>
+
                                     <Viewbox x:Name="FolderIcon"
                                              Grid.Column="1"
-                                             Width="16" Height="13"
+                                             Width="{DynamicResource Theme.IconWidth}"
+                                             Height="{DynamicResource Theme.IconHeight}"
                                              VerticalAlignment="Center">
                                         <Canvas Width="20" Height="16">
                                             <Path Data="M1,5 L7,5 L9,3 L1,3 Z"
@@ -98,7 +110,7 @@
                                                Grid.Column="2"
                                                Text="{Binding Name}"
                                                Foreground="{DynamicResource Theme.PrimaryText}"
-                                               FontSize="12"
+                                               FontSize="{DynamicResource Theme.FontSize}"
                                                VerticalAlignment="Center"
                                                Margin="4,0,0,0"
                                                TextTrimming="CharacterEllipsis"/>
@@ -135,6 +147,14 @@
                                 <Setter TargetName="Row" Property="BorderThickness" Value="1"/>
                                 <Setter TargetName="Row" Property="Padding"         Value="0,4"/>
                             </DataTrigger>
+                            <!-- Show color bar on groups that have an explicit color set -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsGroup}"  Value="True"/>
+                                    <Condition Binding="{Binding HasColor}" Value="True"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="GroupColorBar" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>

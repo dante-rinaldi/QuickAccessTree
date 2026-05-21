@@ -1,7 +1,7 @@
 ﻿namespace SidebarBuddy.Models;
 
 public enum DockSide             { Right, Left }
-public enum AddFolderMode        { CurrentFolder, BrowseDialog }
+public enum AddFolderMode        { CurrentFolder, BrowseDialog, SelectedItem }
 public enum ColorInheritanceMode { PerFolder, Cascade }
 public enum ShowDelay            { Instant, HalfSecond, TwoSeconds, FiveSeconds }
 public enum ThemeMode            { System, Dark, Light }
@@ -35,8 +35,9 @@ public class AppSettings
     public bool                 AutoNestFolders     { get; set; } = true;
 
     // Appearance
-    public ThemeMode Theme { get; set; } = ThemeMode.System;
-    public AppSkin   Skin  { get; set; } = AppSkin.SolidDark;
+    public ThemeMode Theme     { get; set; } = ThemeMode.System;
+    public AppSkin   Skin      { get; set; } = AppSkin.SolidDark;
+    public double    FontScale { get; set; } = 1.0;
 
     // Quick links
     public bool             ShowThisPC          { get; set; } = false;

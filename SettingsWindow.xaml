@@ -348,6 +348,11 @@
                                      Style="{StaticResource SettingsRadio}"
                                      GroupName="AddFolder"
                                      Checked="Setting_Changed"/>
+                        <RadioButton x:Name="RbAddSelected"
+                                     Content="Add selected item in Explorer"
+                                     Style="{StaticResource SettingsRadio}"
+                                     GroupName="AddFolder"
+                                     Checked="Setting_Changed"/>
                         <RadioButton x:Name="RbAddBrowse"
                                      Content="Open folder browser dialog"
                                      Style="{StaticResource SettingsRadio}"
@@ -402,6 +407,26 @@
                                      Style="{StaticResource SettingsRadio}"
                                      GroupName="Theme"
                                      Checked="Setting_Changed"/>
+
+                        <TextBlock Text="FONT &amp; ICON SIZE" Style="{StaticResource SectionLabel}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="36"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider x:Name="FontScaleSlider"
+                                    Minimum="0.75" Maximum="1.75"
+                                    SmallChange="0.05" LargeChange="0.25"
+                                    TickFrequency="0.25" IsSnapToTickEnabled="False"
+                                    Foreground="#0E639C"
+                                    ValueChanged="FontScaleSlider_ValueChanged"/>
+                            <TextBlock x:Name="FontScaleLabel"
+                                       Grid.Column="1"
+                                       Foreground="#DCDCDC"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
 
                         <TextBlock Text="SKIN" Style="{StaticResource SectionLabel}"/>
                         <TextBlock Text="Skins change the visual style of the sidebar."

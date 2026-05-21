@@ -47,6 +47,14 @@ public static class ThemeManager
         }
     }
 
+    public static void ApplyFontScale(double scale)
+    {
+        var r = Application.Current.Resources;
+        r["Theme.FontSize"]   = Math.Round(12.0 * scale, 1);
+        r["Theme.IconWidth"]  = Math.Round(16.0 * scale, 1);
+        r["Theme.IconHeight"] = Math.Round(13.0 * scale, 1);
+    }
+
     private static void Brush(ResourceDictionary r, string key, byte red, byte grn, byte blu)
         => r[key] = new SolidColorBrush(Color.FromRgb(red, grn, blu));
 

@@ -311,6 +311,11 @@ public class ExplorerAttachService : IDisposable
     {
         try
         {
+            // Shell CLSID virtual folders (e.g. "::{20D04FE0-...}") need the "shell:" prefix
+            // so Navigate2 routes them correctly instead of treating them as URLs.
+            if (path.StartsWith("::{", StringComparison.Ordinal))
+                path = "shell:" + path;
+
             Type? t = Type.GetTypeFromCLSID(ShellWindowsCLSID);
             if (t == null) return;
             dynamic sw    = Activator.CreateInstance(t)!;
@@ -332,6 +337,33 @@ public class ExplorerAttachService : IDisposable
             target.Navigate2(ref pv);
         }
         catch { }
+    }
+
+    // Returns the path of the first selected item in the attached Explorer window, or null.
+    public string? GetSelectedExplorerItem()
+    {
+        try
+        {
+            Type? t = Type.GetTypeFromCLSID(ShellWindowsCLSID);
+            if (t == null) return null;
+            dynamic sw = Activator.CreateInstance(t)!;
+            int count = (int)sw.Count;
+            for (int i = 0; i < count; i++)
+            {
+                dynamic? w = sw.Item(i);
+                if (w == null) continue;
+                try
+                {
+                    if ((nint)(int)w.HWND != _explorerHwnd) continue;
+                    dynamic selected = w.Document.SelectedItems();
+                    if ((int)selected.Count > 0)
+                        return (string)selected.Item(0).Path;
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return null;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

@@ -59,8 +59,9 @@ public partial class SettingsWindow : Window
         CbRestoreExpanded.IsChecked = _settings.RestoreExpandedState;
 
         // General — add folder mode
-        RbAddCurrent.IsChecked = _settings.AddFolderBehavior == AddFolderMode.CurrentFolder;
-        RbAddBrowse.IsChecked  = _settings.AddFolderBehavior == AddFolderMode.BrowseDialog;
+        RbAddCurrent.IsChecked  = _settings.AddFolderBehavior == AddFolderMode.CurrentFolder;
+        RbAddSelected.IsChecked = _settings.AddFolderBehavior == AddFolderMode.SelectedItem;
+        RbAddBrowse.IsChecked   = _settings.AddFolderBehavior == AddFolderMode.BrowseDialog;
 
         // Quick links
         CbShowThisPC.IsChecked       = _settings.ShowThisPC;
@@ -77,6 +78,10 @@ public partial class SettingsWindow : Window
         int skinIdx = (int)_settings.Skin;
         if (skinIdx >= 0 && skinIdx < SkinList.Items.Count)
             SkinList.SelectedIndex = skinIdx;
+
+        // Appearance — font scale
+        FontScaleSlider.Value = _settings.FontScale;
+        UpdateFontScaleLabel(_settings.FontScale);
 
         // License
         RefreshLicensePanel();
@@ -132,6 +137,20 @@ public partial class SettingsWindow : Window
         LiveApply();
     }
 
+    private void FontScaleSlider_ValueChanged(object sender,
+        System.Windows.RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_loading) return;
+        double scale = Math.Round(e.NewValue, 2);
+        UpdateFontScaleLabel(scale);
+        _settings.FontScale = scale;
+        ThemeManager.ApplyFontScale(scale);
+        _settingsSvc.Save(_settings);
+    }
+
+    private void UpdateFontScaleLabel(double scale)
+        => FontScaleLabel.Text = $"{(int)Math.Round(scale * 100)}%";
+
     private void LiveApply()
     {
         // Color inheritance
@@ -158,8 +177,9 @@ public partial class SettingsWindow : Window
         _settingsSvc.SetLaunchOnStartup(startup);
 
         // Add folder mode
-        _settings.AddFolderBehavior = RbAddBrowse.IsChecked == true
-            ? AddFolderMode.BrowseDialog : AddFolderMode.CurrentFolder;
+        _settings.AddFolderBehavior = RbAddBrowse.IsChecked    == true ? AddFolderMode.BrowseDialog
+                                    : RbAddSelected.IsChecked  == true ? AddFolderMode.SelectedItem
+                                    : AddFolderMode.CurrentFolder;
 
         // Quick links
         _settings.ShowThisPC        = CbShowThisPC.IsChecked == true;

@@ -33,6 +33,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         Settings = _settingsService.Load();
         ThemeManager.Apply(Settings.Theme);
+        ThemeManager.ApplyFontScale(Settings.FontScale);
 
         _mainWindow = new MainWindow();
 

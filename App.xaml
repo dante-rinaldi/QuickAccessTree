@@ -1,6 +1,7 @@
 ﻿<Application x:Class="SidebarBuddy.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <!-- Theme resource stubs — overwritten at runtime by ThemeManager.Apply() -->
@@ -15,5 +16,9 @@
         <SolidColorBrush x:Key="Theme.SecondaryText" Color="#CCCCCC"/>
         <SolidColorBrush x:Key="Theme.DimText"       Color="#707070"/>
         <SolidColorBrush x:Key="Theme.ScrollThumb"   Color="#555555"/>
+        <!-- Font/icon scale — updated at runtime by ThemeManager.ApplyFontScale() -->
+        <sys:Double x:Key="Theme.FontSize">12</sys:Double>
+        <sys:Double x:Key="Theme.IconWidth">16</sys:Double>
+        <sys:Double x:Key="Theme.IconHeight">13</sys:Double>
     </Application.Resources>
 </Application>

@@ -25,6 +25,7 @@ public partial class MainWindow : Window
 
     private FolderNode? _contextNode;   // node targeted by right-click
     private bool        _isCollapsed;
+    private bool        _suppressNavigation;
     private const double ExpandedWidth  = 220;
     private const double CollapsedWidth = 24;
 
@@ -62,6 +63,13 @@ public partial class MainWindow : Window
         new(StringComparer.OrdinalIgnoreCase);
 
     private void LoadTree()
+    {
+        _suppressNavigation = true;
+        try { LoadTreeCore(); }
+        finally { _suppressNavigation = false; }
+    }
+
+    private void LoadTreeCore()
     {
         var available = new Dictionary<string, FolderNode>(StringComparer.OrdinalIgnoreCase);
 
@@ -128,7 +136,7 @@ public partial class MainWindow : Window
         if (placementsChanged) _settingsSvc.Save(_settings);
 
         ApplyQuickLinks();
-    }
+    }  // end LoadTreeCore
 
     private void ApplyColor(FolderNode n)
     {
@@ -232,7 +240,9 @@ public partial class MainWindow : Window
         bool hasSelection = e.NewValue is FolderNode;
         RemoveBtn.IsEnabled = hasSelection;
 
-        if (e.NewValue is FolderNode node)
+        // Don't navigate during tree reload, and skip group headers (no real path)
+        if (_suppressNavigation) return;
+        if (e.NewValue is FolderNode node && !node.IsGroup)
             _attachSvc?.NavigateTo(node.Path);
     }
 
@@ -398,7 +408,18 @@ public partial class MainWindow : Window
             path = _attachSvc?.GetCurrentExplorerPath();
             if (string.IsNullOrEmpty(path))
             {
-                // Fallback to dialog if no Explorer attached or path unavailable
+                path = BrowseForFolder();
+                if (path == null) return;
+            }
+        }
+        else if (_settings.AddFolderBehavior == AddFolderMode.SelectedItem)
+        {
+            // First try the selected item in Explorer's file pane; fall back to current folder
+            path = _attachSvc?.GetSelectedExplorerItem();
+            if (string.IsNullOrEmpty(path))
+                path = _attachSvc?.GetCurrentExplorerPath();
+            if (string.IsNullOrEmpty(path))
+            {
                 path = BrowseForFolder();
                 if (path == null) return;
             }
@@ -547,9 +568,7 @@ public partial class MainWindow : Window
     private void QuickLink_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: string path })
-            // Shell virtual folders (CLSIDs) aren't accepted by Navigate2 COM.
-            // Pass them directly to explorer.exe which handles "::{...}" syntax natively.
-            System.Diagnostics.Process.Start("explorer.exe", path);
+            _attachSvc?.NavigateTo(path);
     }
 
     // ── Header drag → move Explorer ───────────────────────────────────────

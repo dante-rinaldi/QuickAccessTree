@@ -27,8 +27,10 @@ public class FolderNode : INotifyPropertyChanged
     public string? Color
     {
         get => _color;
-        set { _color = value; OnPropertyChanged(); }
+        set { _color = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasColor)); }
     }
+
+    public bool HasColor => _color != null;
 
     public bool IsExpanded
     {
