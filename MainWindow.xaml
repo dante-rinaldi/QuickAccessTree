@@ -77,7 +77,8 @@
                                                   ClickMode="Press"
                                                   Visibility="Hidden"/>
 
-                                    <Viewbox Grid.Column="1"
+                                    <Viewbox x:Name="FolderIcon"
+                                             Grid.Column="1"
                                              Width="16" Height="13"
                                              VerticalAlignment="Center">
                                         <Canvas Width="20" Height="16">
@@ -93,7 +94,8 @@
                                         </Canvas>
                                     </Viewbox>
 
-                                    <TextBlock Grid.Column="2"
+                                    <TextBlock x:Name="FolderLabel"
+                                               Grid.Column="2"
                                                Text="{Binding Name}"
                                                Foreground="{DynamicResource Theme.PrimaryText}"
                                                FontSize="12"
@@ -125,6 +127,14 @@
                                 <Setter TargetName="Row"
                                         Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
                             </Trigger>
+                            <!-- Group header: outline border, bold label, no folder icon -->
+                            <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                <Setter TargetName="FolderIcon" Property="Visibility"  Value="Collapsed"/>
+                                <Setter TargetName="FolderLabel" Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="Row" Property="BorderBrush"     Value="{DynamicResource Theme.BorderSoft}"/>
+                                <Setter TargetName="Row" Property="BorderThickness" Value="1"/>
+                                <Setter TargetName="Row" Property="Padding"         Value="0,4"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -233,13 +243,13 @@
                                 Content="🗑"
                                 FontSize="11"
                                 IsEnabled="False"/>
-                        <!-- Refresh -->
-                        <Button x:Name="RefreshBtn"
+                        <!-- Settings -->
+                        <Button x:Name="SettingsBtn"
                                 Style="{StaticResource IconBtn}"
                                 DockPanel.Dock="Right"
-                                ToolTip="Refresh"
-                                Click="RefreshBtn_Click"
-                                Content="↻"/>
+                                ToolTip="Settings"
+                                Click="SettingsBtn_Click"
+                                Content="⚙"/>
                         <TextBlock Text="Sidebar Buddy"
                                    FontWeight="SemiBold"
                                    FontSize="12"
@@ -248,10 +258,32 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Folder tree -->
-                <ScrollViewer Grid.Row="1"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
+                <!-- Content area — quick links + tree -->
+                <DockPanel Grid.Row="1">
+
+                    <!-- Quick links pinned to top -->
+                    <Border x:Name="QuickLinksTopPanel"
+                            DockPanel.Dock="Top"
+                            Visibility="Collapsed"
+                            Background="{DynamicResource Theme.HeaderBg}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}"
+                            BorderThickness="0,0,0,1">
+                        <StackPanel x:Name="QuickLinksTopContent" Margin="6,4,6,4"/>
+                    </Border>
+
+                    <!-- Quick links pinned to bottom -->
+                    <Border x:Name="QuickLinksBottomPanel"
+                            DockPanel.Dock="Bottom"
+                            Visibility="Collapsed"
+                            Background="{DynamicResource Theme.HeaderBg}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}"
+                            BorderThickness="0,1,0,0">
+                        <StackPanel x:Name="QuickLinksBottomContent" Margin="6,4,6,4"/>
+                    </Border>
+
+                    <!-- Folder tree -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
                     <TreeView x:Name="FolderTree"
                               Background="Transparent"
                               BorderThickness="0"
@@ -285,7 +317,8 @@
                             </ContextMenu>
                         </TreeView.ContextMenu>
                     </TreeView>
-                </ScrollViewer>
+                    </ScrollViewer>
+                </DockPanel>
 
                 <!-- Footer -->
                 <Border Grid.Row="2"
@@ -294,48 +327,105 @@
                         CornerRadius="0,0,0,6"
                         BorderBrush="{DynamicResource Theme.BorderBrush}"
                         BorderThickness="0,1,0,0">
-                    <Button Content="＋  Add folder…"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Center"
-                            Margin="8,5"
-                            Height="26"
-                            Background="{DynamicResource Theme.ItemHover}"
-                            Foreground="#9CDCFE"
-                            BorderBrush="{DynamicResource Theme.BorderSoft}"
-                            BorderThickness="1"
-                            FontSize="12"
-                            Cursor="Hand"
-                            Click="AddFolderBtn_Click">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="Bd"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="4">
-                                    <ContentPresenter HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd"
-                                                Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                    <Grid Margin="8,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Add Group button -->
+                        <Button Grid.Column="0"
+                                Content="＋ Group"
+                                Height="26"
+                                Background="{DynamicResource Theme.ItemHover}"
+                                Foreground="{DynamicResource Theme.SecondaryText}"
+                                BorderBrush="{DynamicResource Theme.BorderSoft}"
+                                BorderThickness="1"
+                                FontSize="11"
+                                Cursor="Hand"
+                                Click="AddGroupBtn_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Add Folder button -->
+                        <Button Grid.Column="2"
+                                Content="＋ Folder"
+                                Height="26"
+                                Background="{DynamicResource Theme.ItemHover}"
+                                Foreground="#9CDCFE"
+                                BorderBrush="{DynamicResource Theme.BorderSoft}"
+                                BorderThickness="1"
+                                FontSize="11"
+                                Cursor="Hand"
+                                Click="AddFolderBtn_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
                 </Border>
             </Grid>
         </Border>
 
+        <!-- ═══ RESIZE GRIP — overlaid on the open edge ════════════════ -->
+        <Border x:Name="ResizeGrip"
+                Width="6"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                Cursor="SizeWE"
+                Background="Transparent"
+                MouseLeftButtonDown="ResizeGrip_MouseDown"
+                MouseMove="ResizeGrip_MouseMove"
+                MouseLeftButtonUp="ResizeGrip_MouseUp"/>
+
         <!-- ═══ COLLAPSED tab (shown only when collapsed) ═══════════════ -->
         <Border x:Name="CollapsedTab"
                 Visibility="Collapsed"
-                Background="{DynamicResource Theme.HeaderBg}"
                 CornerRadius="6,0,0,6"
                 BorderBrush="{DynamicResource Theme.BorderBrush}"
-                BorderThickness="1,1,0,1">
+                BorderThickness="1,1,0,1"
+                Cursor="Hand"
+                ToolTip="Expand sidebar"
+                MouseLeftButtonDown="CollapsedTab_MouseDown">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="{DynamicResource Theme.HeaderBg}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#1177BB"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Button x:Name="ExpandBtn"
                     Content="▶"
                     FontSize="11"
@@ -343,10 +433,10 @@
                     Background="Transparent"
                     BorderThickness="0"
                     Cursor="Hand"
-                    ToolTip="Expand sidebar"
                     Click="CollapseBtn_Click"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center"/>
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"/>
         </Border>
 
         <!-- Color picker popup -->
@@ -421,6 +511,53 @@
                                 FontSize="11"
                                 Cursor="Hand"
                                 Click="RenameCancel_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+        <!-- Group name popup -->
+        <Popup x:Name="GroupNamePopup"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               Placement="MousePoint">
+            <Border Background="{DynamicResource Theme.PopupBg}"
+                    BorderBrush="{DynamicResource Theme.BorderSoft}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="8">
+                <StackPanel Width="180">
+                    <TextBlock Text="New group name"
+                               Foreground="{DynamicResource Theme.DimText}"
+                               FontSize="11"
+                               Margin="0,0,0,4"/>
+                    <TextBox x:Name="GroupNameBox"
+                             Background="{DynamicResource Theme.SidebarBg}"
+                             Foreground="{DynamicResource Theme.PrimaryText}"
+                             BorderBrush="{DynamicResource Theme.BorderSoft}"
+                             BorderThickness="1"
+                             Padding="4,3"
+                             FontSize="12"
+                             KeyDown="GroupNameBox_KeyDown"/>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,6,0,0">
+                        <Button Content="OK"
+                                Width="48" Height="24"
+                                Margin="0,0,4,0"
+                                Background="#0E639C"
+                                Foreground="#FFFFFF"
+                                BorderThickness="0"
+                                FontSize="11"
+                                Cursor="Hand"
+                                Click="GroupOk_Click"/>
+                        <Button Content="Cancel"
+                                Width="48" Height="24"
+                                Background="{DynamicResource Theme.ItemSelect}"
+                                Foreground="{DynamicResource Theme.SecondaryText}"
+                                BorderThickness="0"
+                                FontSize="11"
+                                Cursor="Hand"
+                                Click="GroupCancel_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

@@ -9,4 +9,5 @@ global using Brush          = System.Windows.Media.Brush;
 global using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 global using DragEventArgs  = System.Windows.DragEventArgs;
 global using DragDropEffects = System.Windows.DragDropEffects;
-global using Brushes        = System.Windows.Media.Brushes;
+global using Brushes             = System.Windows.Media.Brushes;
+global using HorizontalAlignment = System.Windows.HorizontalAlignment;

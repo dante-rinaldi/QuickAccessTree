@@ -42,6 +42,9 @@ public class FolderNode : INotifyPropertyChanged
     // Whether this node was manually added by the user (vs. imported from Quick Access)
     public bool IsCustom { get; set; }
 
+    // True for group header nodes (no filesystem path — synthetic "§g§{guid}" key)
+    public bool IsGroup { get; set; }
+
     // True for the single "loading…" placeholder child added before real children load
     public bool IsDummy { get; set; }
 

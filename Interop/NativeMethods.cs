@@ -22,6 +22,8 @@ internal static class NativeMethods
     // Special HWND insert-after values for SetWindowPos
     public static readonly nint HWND_TOPMOST    = new nint(-1);
     public static readonly nint HWND_NOTOPMOST  = new nint(-2);
+    public static readonly nint HWND_TOP        = new nint(0);
+    public static readonly nint HWND_BOTTOM     = new nint(1);
 
     // GetWindowLong / SetWindowLong indices
     public const int GWL_EXSTYLE = -20;
@@ -44,6 +46,9 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(nint hWnd);
 
     [DllImport("user32.dll")]
     public static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);

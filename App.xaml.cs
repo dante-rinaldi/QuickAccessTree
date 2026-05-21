@@ -77,7 +77,7 @@ public partial class App : System.Windows.Application
         _trayIcon.DoubleClick     += (_, _) => Dispatcher.Invoke(ForceShow);
     }
 
-    private void OpenSettings()
+    public void OpenSettings()
     {
         if (_settingsWindow != null && _settingsWindow.IsLoaded)
         {
@@ -91,6 +91,7 @@ public partial class App : System.Windows.Application
             onApplied: () =>
             {
                 _mainWindow?.ReloadTree();
+                _mainWindow?.ApplyQuickLinks();
                 if (_attachService != null)
                     _attachService.AutoHide = Settings.AutoHide;
             });

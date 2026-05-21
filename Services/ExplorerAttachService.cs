@@ -95,6 +95,8 @@ public class ExplorerAttachService : IDisposable
                 Track(fg);
             else if (!SidebarIsVisible())
                 ShowSidebar(immediate: false);
+            else
+                BringAboveExplorer();   // re-assert z-order each poll while Explorer is foreground
         }
         else
         {
@@ -206,23 +208,29 @@ public class ExplorerAttachService : IDisposable
 
     private void ShowSidebarNow()
     {
-        // WPF must be Visible for it to render into the HWND.
         _sidebar.Visibility = Visibility.Visible;
 
         var helper = new WindowInteropHelper(_sidebar);
         nint hwnd = helper.Handle;
         if (hwnd == nint.Zero) return;
 
-        // Bring sidebar to the top of the non-topmost stack (same level as Explorer)
-        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOP,
-            0, 0, 0, 0,
-            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
-            | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+        // Place sidebar just above Explorer in z-order (not at the absolute top of all windows)
+        // so that other apps (Chrome, VS Code, etc.) can still cover the sidebar.
+        BringAboveExplorer(showWindow: true);
+    }
 
-        // Place Explorer immediately below the sidebar in z-order
-        if (_explorerHwnd != nint.Zero)
-            NativeMethods.SetWindowPos(_explorerHwnd, hwnd, 0, 0, 0, 0,
-                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+    private void BringAboveExplorer(bool showWindow = false)
+    {
+        var helper = new WindowInteropHelper(_sidebar);
+        nint hwnd = helper.Handle;
+        if (hwnd == nint.Zero) return;
+
+        int flags = NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE;
+        if (showWindow) flags |= NativeMethods.SWP_SHOWWINDOW;
+
+        // Insert sidebar directly above Explorer; if no Explorer yet, use HWND_TOP as fallback
+        nint insertAfter = _explorerHwnd != nint.Zero ? _explorerHwnd : NativeMethods.HWND_TOP;
+        NativeMethods.SetWindowPos(hwnd, insertAfter, 0, 0, 0, 0, flags);
     }
 
     private void HideSidebar()

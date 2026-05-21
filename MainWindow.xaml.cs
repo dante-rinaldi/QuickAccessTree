@@ -63,6 +63,10 @@ public partial class MainWindow : Window
     {
         var available = new Dictionary<string, FolderNode>(StringComparer.OrdinalIgnoreCase);
 
+        // Groups first — synthetic paths ("§g§{guid}") are never path-ancestors of real folders
+        foreach (var (synth, name) in _settings.GroupNames)
+            available[synth] = new FolderNode { Name = name, Path = synth, IsGroup = true };
+
         if (_settings.ImportQuickAccess)
         {
             foreach (var n in _qaSvc.GetPinnedFolders())
@@ -104,10 +108,9 @@ public partial class MainWindow : Window
                 roots.Add(node);
         }
 
-        // Apply color cascade if enabled
+        // Apply color cascade if enabled (path-based, works regardless of tree position)
         if (_settings.ColorInheritance == ColorInheritanceMode.Cascade)
-            foreach (var root in roots)
-                CascadeColor(root, null);
+            ApplyCascadeColors(available.Values);
 
         // Apply expanded state and hook persistence
         foreach (var node in available.Values)
@@ -121,6 +124,8 @@ public partial class MainWindow : Window
         FolderTree.ItemsSource = roots;
 
         if (placementsChanged) _settingsSvc.Save(_settings);
+
+        ApplyQuickLinks();
     }
 
     private void ApplyColor(FolderNode n)
@@ -129,15 +134,28 @@ public partial class MainWindow : Window
             n.Color = c;
     }
 
-    private void CascadeColor(FolderNode node, string? parentColor)
+    private void ApplyCascadeColors(IEnumerable<FolderNode> nodes)
     {
-        // Only inherit if no explicit color was set for this node
-        if (!_settings.FolderColors.ContainsKey(node.Path) && parentColor != null)
-            node.Color = parentColor;
+        // Path-based: for each folder without an explicit color, find the longest
+        // ancestor path in FolderColors. Works regardless of tree position.
+        foreach (var node in nodes)
+        {
+            if (node.IsGroup) continue;
+            if (_settings.FolderColors.ContainsKey(node.Path)) continue;
 
-        string? colorForChildren = node.Color ?? parentColor;
-        foreach (var child in node.Children)
-            CascadeColor(child, colorForChildren);
+            string? bestAncestor = null;
+            foreach (var coloredPath in _settings.FolderColors.Keys)
+            {
+                var trimmed = coloredPath.TrimEnd('\\', '/');
+                if (!node.Path.StartsWith(trimmed + "\\", StringComparison.OrdinalIgnoreCase) &&
+                    !node.Path.StartsWith(trimmed + "/",  StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (bestAncestor == null || coloredPath.Length > bestAncestor.Length)
+                    bestAncestor = coloredPath;
+            }
+            if (bestAncestor != null)
+                node.Color = _settings.FolderColors[bestAncestor];
+        }
     }
 
     private void Node_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -164,14 +182,12 @@ public partial class MainWindow : Window
             _settings.Placements.Select(p => p.Path),
             StringComparer.OrdinalIgnoreCase);
 
-        // Append unplaced folders. Sort shortest-first so parents land in
-        // `placed` before their would-be children look for an ancestor.
+        // Append unplaced items at root — user can drag to reorder/nest
         foreach (var path in available.Keys
                      .Where(k => !placed.Contains(k))
                      .OrderBy(k => k.Length))
         {
-            string? parent = _settings.AutoNestFolders ? FindAncestorIn(path, placed) : null;
-            _settings.Placements.Add(new FolderPlacement { Path = path, ParentPath = parent });
+            _settings.Placements.Add(new FolderPlacement { Path = path, ParentPath = null });
             placed.Add(path);
             changed = true;
         }
@@ -222,7 +238,8 @@ public partial class MainWindow : Window
 
     public void ReloadTree() => LoadTree();
 
-    private void RefreshBtn_Click(object sender, RoutedEventArgs e) => LoadTree();
+    private void SettingsBtn_Click(object sender, RoutedEventArgs e)
+        => ((App)Application.Current).OpenSettings();
 
     private void DockToggleBtn_Click(object sender, RoutedEventArgs e)
     {
@@ -237,6 +254,12 @@ public partial class MainWindow : Window
     {
         if (FolderTree.SelectedItem is FolderNode node)
             RemoveFolderNode(node);
+    }
+
+    private void CollapsedTab_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && _isCollapsed)
+            CollapseBtn_Click(sender, e);
     }
 
     private void CollapseBtn_Click(object sender, RoutedEventArgs e)
@@ -303,6 +326,41 @@ public partial class MainWindow : Window
             ? (right ? "▶" : "◀")
             : (right ? "◀" : "▶");
         ExpandBtn.Content = right ? "▶" : "◀";
+
+        // Resize grip sits on the open (away-from-Explorer) edge
+        ResizeGrip.HorizontalAlignment = right
+            ? HorizontalAlignment.Right
+            : HorizontalAlignment.Left;
+    }
+
+    // ── Add group ─────────────────────────────────────────────────────────
+
+    private void AddGroupBtn_Click(object sender, RoutedEventArgs e)
+    {
+        GroupNameBox.Text = string.Empty;
+        GroupNamePopup.IsOpen = true;
+        GroupNameBox.Focus();
+    }
+
+    private void GroupNameBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)  CommitGroupCreate();
+        if (e.Key == Key.Escape) GroupNamePopup.IsOpen = false;
+    }
+
+    private void GroupOk_Click(object sender, RoutedEventArgs e)     => CommitGroupCreate();
+    private void GroupCancel_Click(object sender, RoutedEventArgs e) => GroupNamePopup.IsOpen = false;
+
+    private void CommitGroupCreate()
+    {
+        string name = GroupNameBox.Text.Trim();
+        if (string.IsNullOrEmpty(name)) return;
+
+        string synth = "§g§" + Guid.NewGuid().ToString("N");
+        _settings.GroupNames[synth] = name;
+        _settingsSvc.Save(_settings);
+        GroupNamePopup.IsOpen = false;
+        LoadTree();
     }
 
     // ── Add folder ────────────────────────────────────────────────────────
@@ -356,7 +414,119 @@ public partial class MainWindow : Window
     // ── Click-to-focus Explorer ───────────────────────────────────────────
 
     private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-        => _attachSvc?.FocusExplorer();
+    {
+        // Don't steal focus when the user is typing in a popup
+        if (ColorPickerPopup.IsOpen || RenamePopup.IsOpen || GroupNamePopup.IsOpen) return;
+        _attachSvc?.FocusExplorer();
+    }
+
+    // ── Sidebar width resize ──────────────────────────────────────────────
+
+    private const double MinSidebarWidth = 140;
+    private const double MaxSidebarWidth = 600;
+
+    private bool   _resizing;
+    private double _resizeStartX;
+    private double _resizeStartWidth;
+    private double _resizeStartLeft;
+
+    private void ResizeGrip_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        _resizing        = true;
+        _resizeStartX     = PointToScreen(e.GetPosition(this)).X;
+        _resizeStartWidth = Width;
+        _resizeStartLeft  = Left;
+        ResizeGrip.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void ResizeGrip_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_resizing || e.LeftButton != MouseButtonState.Pressed) return;
+        double delta = PointToScreen(e.GetPosition(this)).X - _resizeStartX;
+
+        double newWidth;
+        if (_settings.DockSide == DockSide.Right)
+        {
+            // Sidebar is to the right of Explorer; open edge is the right side
+            // Dragging right = wider, dragging left = narrower
+            newWidth = Math.Clamp(_resizeStartWidth + delta, MinSidebarWidth, MaxSidebarWidth);
+            Width = newWidth;
+        }
+        else
+        {
+            // Sidebar is to the left of Explorer; open edge is the left side
+            // Dragging left = wider (width grows, left position moves left)
+            newWidth = Math.Clamp(_resizeStartWidth - delta, MinSidebarWidth, MaxSidebarWidth);
+            Left  = _resizeStartLeft - (newWidth - _resizeStartWidth);
+            Width = newWidth;
+        }
+    }
+
+    private void ResizeGrip_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_resizing) return;
+        _resizing = false;
+        ResizeGrip.ReleaseMouseCapture();
+        _settings.SidebarWidthDip = Width;
+        _settingsSvc.Save(_settings);
+        _attachSvc?.UpdateWidth(Width);
+    }
+
+    // ── Quick links ───────────────────────────────────────────────────────
+
+    private static readonly (string Label, string Path)[] QuickLinkDefs =
+    {
+        ("💻  This PC",       "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"),
+        ("⚙  Control Panel", "::{26EE0668-A00A-44D7-9371-BEB064C98683}"),
+    };
+
+    public void ApplyQuickLinks()
+    {
+        QuickLinksTopContent.Children.Clear();
+        QuickLinksBottomContent.Children.Clear();
+
+        bool[] enabled = { _settings.ShowThisPC, _settings.ShowControlPanel };
+        bool anyEnabled = enabled.Any(v => v);
+
+        bool showTop    = anyEnabled && _settings.QuickLinksPosition == QuickLinkPosition.Top;
+        bool showBottom = anyEnabled && _settings.QuickLinksPosition == QuickLinkPosition.Bottom;
+        QuickLinksTopPanel.Visibility    = showTop    ? Visibility.Visible : Visibility.Collapsed;
+        QuickLinksBottomPanel.Visibility = showBottom ? Visibility.Visible : Visibility.Collapsed;
+        if (!anyEnabled) return;
+
+        var target = showTop ? QuickLinksTopContent : QuickLinksBottomContent;
+        for (int i = 0; i < QuickLinkDefs.Length; i++)
+        {
+            if (!enabled[i]) continue;
+            var (label, path) = QuickLinkDefs[i];
+            var btn = new System.Windows.Controls.Button
+            {
+                Content         = label,
+                Tag             = path,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Height          = 24,
+                Margin          = new Thickness(0, 1, 0, 1),
+                Cursor          = Cursors.Hand,
+                Background      = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground      = (Brush)TryFindResource("Theme.SecondaryText")
+                                  ?? Brushes.LightGray,
+                FontSize        = 11,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Padding         = new Thickness(8, 0, 0, 0),
+            };
+            btn.Click += QuickLink_Click;
+            target.Children.Add(btn);
+        }
+    }
+
+    private void QuickLink_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button { Tag: string path })
+            _attachSvc?.NavigateTo(path);
+    }
 
     // ── Header drag → move Explorer ───────────────────────────────────────
 
@@ -573,7 +743,7 @@ public partial class MainWindow : Window
 
     private void CtxOpen_Click(object sender, RoutedEventArgs e)
     {
-        if (_contextNode is { } n)
+        if (_contextNode is { IsGroup: false } n)
             System.Diagnostics.Process.Start("explorer.exe", n.Path);
     }
 
@@ -585,13 +755,26 @@ public partial class MainWindow : Window
 
     private void RemoveFolderNode(FolderNode node)
     {
-        // Remove from settings
-        _settings.CustomFolders.RemoveAll(
-            cf => cf.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
-        // Also remove from QA-imported set by marking as "don't show"
-        // (we track removed QA folders via a blocklist)
-        if (!_settings.RemovedPaths.Contains(node.Path))
-            _settings.RemovedPaths.Add(node.Path);
+        if (node.IsGroup)
+        {
+            _settings.GroupNames.Remove(node.Path);
+            // Move the group's direct children back to root
+            foreach (var p in _settings.Placements)
+            {
+                if (p.ParentPath != null &&
+                    p.ParentPath.Equals(node.Path, StringComparison.OrdinalIgnoreCase))
+                    p.ParentPath = null;
+            }
+            _settings.Placements.RemoveAll(
+                p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+        }
+        else
+        {
+            _settings.CustomFolders.RemoveAll(
+                cf => cf.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            if (!_settings.RemovedPaths.Contains(node.Path))
+                _settings.RemovedPaths.Add(node.Path);
+        }
 
         _settingsSvc.Save(_settings);
         LoadTree();
@@ -674,9 +857,16 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(newName)) return;
 
         n.Name = newName;
-        var cf = _settings.CustomFolders
-            .FirstOrDefault(f => f.Path.Equals(n.Path, StringComparison.OrdinalIgnoreCase));
-        if (cf != null) cf.DisplayName = newName;
+        if (n.IsGroup)
+        {
+            _settings.GroupNames[n.Path] = newName;
+        }
+        else
+        {
+            var cf = _settings.CustomFolders
+                .FirstOrDefault(f => f.Path.Equals(n.Path, StringComparison.OrdinalIgnoreCase));
+            if (cf != null) cf.DisplayName = newName;
+        }
 
         _settingsSvc.Save(_settings);
         RenamePopup.IsOpen = false;

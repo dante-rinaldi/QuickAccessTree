@@ -11,6 +11,8 @@ public enum AppSkin
     NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast
 }
 
+public enum QuickLinkPosition { Top, Bottom }
+
 public class AppSettings
 {
     public List<CustomFolder>    CustomFolders     { get; set; } = new();
@@ -20,7 +22,8 @@ public class AppSettings
     public DockSide DockSide         { get; set; } = DockSide.Right;
     public List<string> RemovedPaths { get; set; } = new();
     public List<FolderPlacement> Placements  { get; set; } = new();
-    public Dictionary<string, bool> ExpandedPaths { get; set; } = new();
+    public Dictionary<string, bool>   ExpandedPaths { get; set; } = new();
+    public Dictionary<string, string> GroupNames    { get; set; } = new();
 
     // General settings
     public ColorInheritanceMode ColorInheritance   { get; set; } = ColorInheritanceMode.PerFolder;
@@ -34,6 +37,11 @@ public class AppSettings
     // Appearance
     public ThemeMode Theme { get; set; } = ThemeMode.System;
     public AppSkin   Skin  { get; set; } = AppSkin.SolidDark;
+
+    // Quick links
+    public bool             ShowThisPC          { get; set; } = false;
+    public bool             ShowControlPanel    { get; set; } = false;
+    public QuickLinkPosition QuickLinksPosition { get; set; } = QuickLinkPosition.Bottom;
 
     // License / trial
     public DateTime TrialStartDate { get; set; } = DateTime.UtcNow;

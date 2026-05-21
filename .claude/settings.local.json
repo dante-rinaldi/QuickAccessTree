@@ -18,7 +18,11 @@
       "Bash(tasklist /FI \"IMAGENAME eq QuickAccessTree.exe\")",
       "PowerShell(Stop-Process *)",
       "Read(//c/MyProjects/Drive Browser/**)",
-      "Read(//c/MyProjects/Mesh2Print App/**)"
+      "Read(//c/MyProjects/Mesh2Print App/**)",
+      "Bash(Stop-Process -Name SidebarBuddy -Force -ErrorAction SilentlyContinue)",
+      "Bash(Start-Sleep -Milliseconds 500)",
+      "PowerShell(Start-Process \"C:\\\\MyProjects\\\\QuickAccessTree\\\\bin\\\\Debug\\\\net8.0-windows\\\\SidebarBuddy.exe\")",
+      "PowerShell(dotnet build \"C:\\\\MyProjects\\\\QuickAccessTree\" -v minimal 2>&1 | Select-String -Pattern \"error CS|Error\\\\\\(s\\\\\\)|succeeded\" | Where-Object { $_ -notmatch \"0 Error\" })"
     ]
   }
 }

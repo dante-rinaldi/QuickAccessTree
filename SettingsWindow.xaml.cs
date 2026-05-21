@@ -62,8 +62,11 @@ public partial class SettingsWindow : Window
         RbAddCurrent.IsChecked = _settings.AddFolderBehavior == AddFolderMode.CurrentFolder;
         RbAddBrowse.IsChecked  = _settings.AddFolderBehavior == AddFolderMode.BrowseDialog;
 
-        // General — folder nesting
-        CbAutoNest.IsChecked = _settings.AutoNestFolders;
+        // Quick links
+        CbShowThisPC.IsChecked       = _settings.ShowThisPC;
+        CbShowControlPanel.IsChecked = _settings.ShowControlPanel;
+        RbQuickLinksTop.IsChecked    = _settings.QuickLinksPosition == QuickLinkPosition.Top;
+        RbQuickLinksBottom.IsChecked = _settings.QuickLinksPosition == QuickLinkPosition.Bottom;
 
         // Appearance — theme
         RbThemeSystem.IsChecked = _settings.Theme == ThemeMode.System;
@@ -149,7 +152,6 @@ public partial class SettingsWindow : Window
 
         // Behavior
         _settings.RestoreExpandedState = CbRestoreExpanded.IsChecked == true;
-        _settings.AutoNestFolders      = CbAutoNest.IsChecked == true;
 
         bool startup = CbStartup.IsChecked == true;
         _settings.LaunchOnStartup = startup;
@@ -158,6 +160,12 @@ public partial class SettingsWindow : Window
         // Add folder mode
         _settings.AddFolderBehavior = RbAddBrowse.IsChecked == true
             ? AddFolderMode.BrowseDialog : AddFolderMode.CurrentFolder;
+
+        // Quick links
+        _settings.ShowThisPC        = CbShowThisPC.IsChecked == true;
+        _settings.ShowControlPanel  = CbShowControlPanel.IsChecked == true;
+        _settings.QuickLinksPosition = RbQuickLinksTop.IsChecked == true
+            ? QuickLinkPosition.Top : QuickLinkPosition.Bottom;
 
         // Appearance — theme
         ThemeMode newTheme = RbThemeLight.IsChecked == true ? ThemeMode.Light
