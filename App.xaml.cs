@@ -57,6 +57,10 @@ public partial class App : System.Windows.Application
         NativeMethods.SetWindowLong(helper.Handle, NativeMethods.GWL_EXSTYLE,
             ex | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW);
 
+        ThemeManager.WindowHandle = helper.Handle;
+        ThemeManager.ApplySkin(Settings.Skin);
+        ThemeManager.ApplyAppearance(Settings);
+
         _mainWindow.Hide(); // parked off-screen; ExplorerAttachService shows it
 
         _attachService = new ExplorerAttachService(
@@ -103,6 +107,7 @@ public partial class App : System.Windows.Application
                 {
                     _mainWindow?.ReloadTree();
                     _mainWindow?.ApplyQuickLinks();
+                    _mainWindow?.ApplyDockCorners();
                     if (_attachService != null)
                         _attachService.AutoHide = Settings.AutoHide;
                 });

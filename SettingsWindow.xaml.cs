@@ -14,6 +14,13 @@ public partial class SettingsWindow : Window
     private readonly Action?                _onApplied;
     private bool _loading;
 
+    private static readonly string[] HighlightPresets =
+    {
+        "#FFC000", "#FF5252", "#69F0AE", "#40C4FF",
+        "#FF9100", "#E040FB", "#00E5FF", "#FF4081",
+        "#BDBDBD", "#90A4AE", "#BCAAA4", "#FFFFFF",
+    };
+
     public SettingsWindow(
         AppSettings            settings,
         SettingsService        settingsSvc,
@@ -87,6 +94,21 @@ public partial class SettingsWindow : Window
         // License
         RefreshLicensePanel();
 
+        // Customization
+        OpacitySlider.Value = _settings.SidebarOpacity;
+        UpdateOpacityLabel(_settings.SidebarOpacity);
+        BuildHighlightSwatches();
+        CbTextGlow.IsChecked        = _settings.TextGlow;
+        GlowSlider.Value            = _settings.TextGlowIntensity;
+        UpdateGlowLabel(_settings.TextGlowIntensity);
+        GlowIntensityRow.Visibility = _settings.TextGlow ? Visibility.Visible : Visibility.Collapsed;
+        // Background image
+        CbShowBgImage.IsChecked = _settings.ShowBackgroundImage;
+        BgOpacitySlider.Value   = _settings.BackgroundImageOpacity;
+        UpdateBgOpacityLabel(_settings.BackgroundImageOpacity);
+        UpdateCustomUploadPanelState(_settings.Skin);
+        UpdateCustomImagePathBox();
+
         _loading = false;
     }
 
@@ -135,6 +157,7 @@ public partial class SettingsWindow : Window
     private void Skin_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_loading) return;
+        UpdateCustomUploadPanelState((AppSkin)SkinList.SelectedIndex);
         LiveApply();
     }
 
@@ -150,7 +173,10 @@ public partial class SettingsWindow : Window
     }
 
     private void UpdateFontScaleLabel(double scale)
-        => FontScaleLabel.Text = $"{(int)Math.Round(scale * 100)}%";
+    {
+        if (FontScaleLabel == null) return;
+        FontScaleLabel.Text = $"{(int)Math.Round(scale * 100)}%";
+    }
 
     private void LiveApply()
     {
@@ -198,6 +224,7 @@ public partial class SettingsWindow : Window
         // Appearance — skin
         if (SkinList.SelectedIndex >= 0)
             _settings.Skin = (AppSkin)SkinList.SelectedIndex;
+        ThemeManager.ApplySkin(_settings.Skin);
 
         // Live-apply service changes
         if (_attachSvc != null)
@@ -207,8 +234,149 @@ public partial class SettingsWindow : Window
             _attachSvc.AutoHide      = _settings.AutoHide;
         }
 
+        // Customization
+        _settings.SidebarOpacity         = Math.Round(OpacitySlider.Value, 2);
+        _settings.TextGlow               = CbTextGlow.IsChecked == true;
+        _settings.TextGlowIntensity      = Math.Round(GlowSlider.Value, 2);
+        _settings.ShowBackgroundImage    = CbShowBgImage.IsChecked == true;
+        _settings.BackgroundImageOpacity = Math.Round(BgOpacitySlider.Value, 2);
+        ThemeManager.ApplyAppearance(_settings);
+
         _settingsSvc.Save(_settings);
         _onApplied?.Invoke();
+    }
+
+    // ── Customization helpers ─────────────────────────────────────────
+
+    private void UpdateOpacityLabel(double v)
+    {
+        if (OpacityLabel == null) return;
+        OpacityLabel.Text = $"{(int)Math.Round(v * 100)}%";
+    }
+
+    private void UpdateGlowLabel(double v)
+    {
+        if (GlowLabel == null) return;
+        GlowLabel.Text = $"{(int)Math.Round(v * 100)}%";
+    }
+
+    private void UpdateBgOpacityLabel(double v)
+    {
+        if (BgOpacityLabel == null) return;
+        BgOpacityLabel.Text = $"{(int)Math.Round(v * 100)}%";
+    }
+
+    private void BuildHighlightSwatches()
+    {
+        HighlightSwatchPanel.Children.Clear();
+        foreach (var hex in HighlightPresets)
+        {
+            var s = new Border
+            {
+                Width        = 20,
+                Height       = 20,
+                CornerRadius = new CornerRadius(3),
+                Margin       = new Thickness(0, 0, 4, 4),
+                Background   = new System.Windows.Media.SolidColorBrush(
+                                   (System.Windows.Media.Color)
+                                   System.Windows.Media.ColorConverter.ConvertFromString(hex)),
+                Cursor       = Cursors.Hand,
+                Tag          = hex,
+                ToolTip      = hex,
+            };
+            // Highlight the active selection
+            if (hex == _settings.HighlightColor)
+                s.BorderBrush = System.Windows.Media.Brushes.White;
+            s.BorderThickness = hex == _settings.HighlightColor
+                ? new Thickness(2) : new Thickness(0);
+            s.MouseLeftButtonUp += HighlightSwatch_Click;
+            HighlightSwatchPanel.Children.Add(s);
+        }
+    }
+
+    private void HighlightSwatch_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is not Border { Tag: string hex }) return;
+        _settings.HighlightColor = hex;
+        BuildHighlightSwatches(); // refresh selection ring
+        if (!_loading) LiveApply();
+    }
+
+    private void ClearHighlight_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.HighlightColor = null;
+        BuildHighlightSwatches();
+        if (!_loading) LiveApply();
+    }
+
+    private void OpacitySlider_ValueChanged(object sender,
+        System.Windows.RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_loading) return;
+        UpdateOpacityLabel(e.NewValue);
+        LiveApply();
+    }
+
+    private void CbTextGlow_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        GlowIntensityRow.Visibility = CbTextGlow.IsChecked == true
+            ? Visibility.Visible : Visibility.Collapsed;
+        LiveApply();
+    }
+
+    private void GlowSlider_ValueChanged(object sender,
+        System.Windows.RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_loading) return;
+        UpdateGlowLabel(e.NewValue);
+        LiveApply();
+    }
+
+    private void UpdateCustomUploadPanelState(AppSkin skin)
+    {
+        bool isCustom = skin == AppSkin.Custom;
+        CustomUploadPanel.IsEnabled = isCustom;
+        CustomUploadPanel.Opacity   = isCustom ? 1.0 : 0.38;
+    }
+
+    private void UpdateCustomImagePathBox()
+    {
+        if (CustomImagePathBox == null) return;
+        CustomImagePathBox.Text = string.IsNullOrEmpty(_settings.CustomImagePath)
+            ? "(none)" : _settings.CustomImagePath;
+    }
+
+    private void BrowseCustomImage_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title  = "Select custom background image",
+            Filter = "Image files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|All files (*.*)|*.*",
+        };
+        if (dlg.ShowDialog() != true) return;
+        _settings.CustomImagePath = dlg.FileName;
+        CustomImagePathBox.Text   = dlg.FileName;
+        // Auto-switch to Custom skin
+        if (SkinList.SelectedIndex != (int)AppSkin.Custom)
+            SkinList.SelectedIndex = (int)AppSkin.Custom; // fires Skin_Changed → LiveApply
+        else
+            LiveApply();
+    }
+
+    private void ClearCustomImage_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.CustomImagePath = null;
+        CustomImagePathBox.Text   = "(none)";
+        LiveApply();
+    }
+
+    private void BgOpacitySlider_ValueChanged(object sender,
+        System.Windows.RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_loading) return;
+        UpdateBgOpacityLabel(e.NewValue);
+        LiveApply();
     }
 
     private static double DelayToSeconds(ShowDelay d) => d switch
@@ -231,10 +399,19 @@ public partial class SettingsWindow : Window
     // ── License ───────────────────────────────────────────────────────
 
     private void BuyNow_Click(object sender, RoutedEventArgs e)
+        => OpenUrl("https://sidebarbuddy.com/buy");
+
+    private void MyAccount_Click(object sender, RoutedEventArgs e)
+        => OpenUrl("https://sidebarbuddy.com/account");
+
+    private void Support_Click(object sender, RoutedEventArgs e)
+        => OpenUrl("https://sidebarbuddy.com/support");
+
+    private static void OpenUrl(string url)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
-            FileName        = "https://sidebarbuddy.com/buy",
+            FileName        = url,
             UseShellExecute = true
         });
     }

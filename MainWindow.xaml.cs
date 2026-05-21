@@ -317,33 +317,47 @@ public partial class MainWindow : Window
 
     // ── Dock corner styling ───────────────────────────────────────────────
 
-    private void ApplyDockCorners()
+    internal void ApplyDockCorners()
     {
-        bool right = _settings.DockSide == DockSide.Right;
+        bool right   = _settings.DockSide == DockSide.Right;
+        bool isGlass = _settings.Skin is AppSkin.FrostedGlass or AppSkin.Mica;
 
-        OuterBorder.CornerRadius = right
-            ? new CornerRadius(6, 0, 0, 6)
-            : new CornerRadius(0, 6, 6, 0);
+        if (isGlass)
+        {
+            // Glass skins float freely — full outline on every side, all corners rounded.
+            OuterBorder.CornerRadius   = new CornerRadius(6);
+            HeaderBorder.CornerRadius  = new CornerRadius(6, 6, 0, 0);
+            FooterBorder.CornerRadius  = new CornerRadius(0, 0, 6, 6);
+            CollapsedTab.CornerRadius  = new CornerRadius(6);
+            OuterBorder.BorderThickness  = new Thickness(1);
+            CollapsedTab.BorderThickness = new Thickness(1);
+        }
+        else
+        {
+            OuterBorder.CornerRadius = right
+                ? new CornerRadius(6, 0, 0, 6)
+                : new CornerRadius(0, 6, 6, 0);
 
-        HeaderBorder.CornerRadius = right
-            ? new CornerRadius(6, 0, 0, 0)
-            : new CornerRadius(0, 6, 0, 0);
+            HeaderBorder.CornerRadius = right
+                ? new CornerRadius(6, 0, 0, 0)
+                : new CornerRadius(0, 6, 0, 0);
 
-        FooterBorder.CornerRadius = right
-            ? new CornerRadius(0, 0, 0, 6)
-            : new CornerRadius(0, 0, 6, 0);
+            FooterBorder.CornerRadius = right
+                ? new CornerRadius(0, 0, 0, 6)
+                : new CornerRadius(0, 0, 6, 0);
 
-        CollapsedTab.CornerRadius = right
-            ? new CornerRadius(6, 0, 0, 6)
-            : new CornerRadius(0, 6, 6, 0);
+            CollapsedTab.CornerRadius = right
+                ? new CornerRadius(6, 0, 0, 6)
+                : new CornerRadius(0, 6, 6, 0);
 
-        OuterBorder.BorderThickness = right
-            ? new Thickness(1, 1, 0, 1)
-            : new Thickness(0, 1, 1, 1);
+            OuterBorder.BorderThickness = right
+                ? new Thickness(1, 1, 0, 1)
+                : new Thickness(0, 1, 1, 1);
 
-        CollapsedTab.BorderThickness = right
-            ? new Thickness(1, 1, 0, 1)
-            : new Thickness(0, 1, 1, 1);
+            CollapsedTab.BorderThickness = right
+                ? new Thickness(1, 1, 0, 1)
+                : new Thickness(0, 1, 1, 1);
+        }
 
         // Collapse/expand arrows flip with dock side
         CollapseBtn.Content = _isCollapsed
@@ -687,26 +701,15 @@ public partial class MainWindow : Window
         return _contextNode != null ? new List<FolderNode> { _contextNode } : new List<FolderNode>();
     }
 
-    // BFS over Placements to find all descendant FolderNodes of a group (or any parent path).
-    private IEnumerable<FolderNode> GetGroupDescendantNodes(string parentPath)
+    // Recursively yields all visual descendants of a node using its already-populated Children tree.
+    private static IEnumerable<FolderNode> GetVisualDescendants(FolderNode node)
     {
-        var result = new List<FolderNode>();
-        var queue  = new Queue<string>();
-        foreach (var p in _settings.Placements)
-            if (p.ParentPath?.Equals(parentPath, StringComparison.OrdinalIgnoreCase) == true)
-                queue.Enqueue(p.Path);
-        while (queue.Count > 0)
+        foreach (var child in node.Children)
         {
-            var path = queue.Dequeue();
-            if (_nodesByPath.TryGetValue(path, out var node))
-            {
-                result.Add(node);
-                foreach (var p in _settings.Placements)
-                    if (p.ParentPath?.Equals(path, StringComparison.OrdinalIgnoreCase) == true)
-                        queue.Enqueue(p.Path);
-            }
+            yield return child;
+            foreach (var desc in GetVisualDescendants(child))
+                yield return desc;
         }
-        return result;
     }
 
     private void FolderTree_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -984,11 +987,8 @@ public partial class MainWindow : Window
         {
             target.Color = hex;
             _settings.FolderColors[target.Path] = hex;
-
-            // Fix 1: when coloring a group, also apply to all its descendants
-            if (target.IsGroup)
-                foreach (var child in GetGroupDescendantNodes(target.Path))
-                    _settings.FolderColors[child.Path] = hex;
+            foreach (var desc in GetVisualDescendants(target))
+                _settings.FolderColors[desc.Path] = hex;
         }
 
         _settingsSvc.Save(_settings);
@@ -1007,11 +1007,8 @@ public partial class MainWindow : Window
         {
             target.Color = null;
             _settings.FolderColors.Remove(target.Path);
-
-            // Fix 1: when resetting a group, also remove color from all its descendants
-            if (target.IsGroup)
-                foreach (var child in GetGroupDescendantNodes(target.Path))
-                    _settings.FolderColors.Remove(child.Path);
+            foreach (var desc in GetVisualDescendants(target))
+                _settings.FolderColors.Remove(desc.Path);
         }
 
         _settingsSvc.Save(_settings);

@@ -8,7 +8,8 @@ public enum ThemeMode            { System, Dark, Light }
 public enum AppSkin
 {
     SolidDark, SolidLight, FrostedGlass, Mica,
-    NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast
+    NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast,
+    Custom
 }
 
 public enum QuickLinkPosition { Top, Bottom }
@@ -16,7 +17,7 @@ public enum QuickLinkPosition { Top, Bottom }
 public class AppSettings
 {
     public List<CustomFolder>    CustomFolders     { get; set; } = new();
-    public Dictionary<string, string> FolderColors { get; set; } = new();
+    public Dictionary<string, string> FolderColors { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public bool   ImportQuickAccess  { get; set; } = true;
     public double SidebarWidthDip    { get; set; } = 220;
     public DockSide DockSide         { get; set; } = DockSide.Right;
@@ -38,6 +39,15 @@ public class AppSettings
     public ThemeMode Theme     { get; set; } = ThemeMode.System;
     public AppSkin   Skin      { get; set; } = AppSkin.SolidDark;
     public double    FontScale { get; set; } = 1.0;
+
+    // Customization
+    public double  SidebarOpacity         { get; set; } = 1.0;
+    public string? HighlightColor         { get; set; }
+    public bool    TextGlow               { get; set; } = false;
+    public double  TextGlowIntensity      { get; set; } = 0.5;
+    public bool    ShowBackgroundImage    { get; set; } = true;
+    public double  BackgroundImageOpacity { get; set; } = 0.35;
+    public string? CustomImagePath        { get; set; }
 
     // Quick links
     public bool             ShowThisPC          { get; set; } = false;

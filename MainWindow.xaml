@@ -132,6 +132,7 @@
                                                    Text="{Binding Name}"
                                                    Foreground="{DynamicResource Theme.PrimaryText}"
                                                    FontSize="{DynamicResource Theme.FontSize}"
+                                                   Effect="{DynamicResource Theme.TextGlowEffect}"
                                                    VerticalAlignment="Center"
                                                    Margin="4,0,0,0"
                                                    TextTrimming="CharacterEllipsis"/>
@@ -270,6 +271,7 @@
         <!-- ═══ EXPANDED sidebar ════════════════════════════════════════ -->
         <Border x:Name="OuterBorder"
                 Background="{DynamicResource Theme.SidebarBg}"
+                Opacity="{DynamicResource Theme.SidebarOpacity}"
                 CornerRadius="6,0,0,6"
                 BorderBrush="{DynamicResource Theme.BorderBrush}"
                 BorderThickness="1,1,0,1">
@@ -279,6 +281,14 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="38"/>
                 </Grid.RowDefinitions>
+
+                <!-- Background texture image spanning all rows -->
+                <Image Grid.RowSpan="3"
+                       Source="{DynamicResource Theme.BgImageSource}"
+                       Opacity="{DynamicResource Theme.BgImageOpacity}"
+                       Visibility="{DynamicResource Theme.BgImageVisible}"
+                       Stretch="UniformToFill"
+                       IsHitTestVisible="False"/>
 
                 <!-- Header — drag to move Explorer -->
                 <Border Grid.Row="0"
