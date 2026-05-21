@@ -14,7 +14,9 @@
         PreviewMouseDown="Window_PreviewMouseDown">
 
     <Window.Resources>
-        <conv:ColorToBrushConverter x:Key="ColorToBrush"/>
+        <conv:ColorToBrushConverter      x:Key="ColorToBrush"/>
+        <conv:GroupBorderBrushConverter  x:Key="GroupBorderBrush"/>
+        <conv:GroupFadedBrushConverter   x:Key="GroupFadedBrush"/>
 
         <!-- Expand/collapse chevron on tree nodes -->
         <Style x:Key="ChevronToggle" TargetType="ToggleButton">
@@ -61,59 +63,79 @@
                                     CornerRadius="4"
                                     Margin="4,1,6,1"
                                     Padding="0,3">
+                                <Border.BorderBrush>
+                                    <MultiBinding Converter="{StaticResource GroupBorderBrush}">
+                                        <Binding Path="IsGroup"/>
+                                        <Binding Path="Color"/>
+                                    </MultiBinding>
+                                </Border.BorderBrush>
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="18"/>
-                                        <ColumnDefinition Width="20"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <ToggleButton Grid.Column="0"
-                                                  Style="{StaticResource ChevronToggle}"
-                                                  x:Name="Expander"
-                                                  IsChecked="{Binding IsExpanded,
-                                                      RelativeSource={RelativeSource TemplatedParent},
-                                                      Mode=TwoWay}"
-                                                  ClickMode="Press"
-                                                  Visibility="Hidden"/>
-
-                                    <!-- Color indicator shown on group headers when a color is set -->
-                                    <Border x:Name="GroupColorBar"
-                                            Grid.Column="1"
-                                            Width="{DynamicResource Theme.IconWidth}"
-                                            Height="{DynamicResource Theme.IconHeight}"
+                                    <!-- Faded tint for colored groups (behind content) -->
+                                    <Border x:Name="GroupBgLayer"
                                             CornerRadius="3"
-                                            Visibility="Collapsed"
-                                            Background="{Binding Color,
-                                                Converter={StaticResource ColorToBrush}}"
-                                            VerticalAlignment="Center"/>
+                                            IsHitTestVisible="False">
+                                        <Border.Background>
+                                            <MultiBinding Converter="{StaticResource GroupFadedBrush}">
+                                                <Binding Path="IsGroup"/>
+                                                <Binding Path="Color"/>
+                                            </MultiBinding>
+                                        </Border.Background>
+                                    </Border>
+                                    <!-- Content -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="18"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <Viewbox x:Name="FolderIcon"
-                                             Grid.Column="1"
-                                             Width="{DynamicResource Theme.IconWidth}"
-                                             Height="{DynamicResource Theme.IconHeight}"
-                                             VerticalAlignment="Center">
-                                        <Canvas Width="20" Height="16">
-                                            <Path Data="M1,5 L7,5 L9,3 L1,3 Z"
-                                                  Fill="{Binding Color,
-                                                      Converter={StaticResource ColorToBrush}}"/>
-                                            <Path Data="M1,5 L1,15 L19,15 L19,5 Z"
-                                                  Fill="{Binding Color,
-                                                      Converter={StaticResource ColorToBrush}}"/>
-                                            <Path Data="M1,5 L19,5"
-                                                  Stroke="#40FFFFFF"
-                                                  StrokeThickness="1"/>
-                                        </Canvas>
-                                    </Viewbox>
+                                        <ToggleButton Grid.Column="0"
+                                                      Style="{StaticResource ChevronToggle}"
+                                                      x:Name="Expander"
+                                                      IsChecked="{Binding IsExpanded,
+                                                          RelativeSource={RelativeSource TemplatedParent},
+                                                          Mode=TwoWay}"
+                                                      ClickMode="Press"
+                                                      Visibility="Hidden"/>
 
-                                    <TextBlock x:Name="FolderLabel"
-                                               Grid.Column="2"
-                                               Text="{Binding Name}"
-                                               Foreground="{DynamicResource Theme.PrimaryText}"
-                                               FontSize="{DynamicResource Theme.FontSize}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,0,0"
-                                               TextTrimming="CharacterEllipsis"/>
+                                        <!-- Color swatch shown on group headers when a color is set -->
+                                        <Border x:Name="GroupColorBar"
+                                                Grid.Column="1"
+                                                Width="{DynamicResource Theme.IconWidth}"
+                                                Height="{DynamicResource Theme.IconHeight}"
+                                                CornerRadius="3"
+                                                Visibility="Collapsed"
+                                                Background="{Binding Color,
+                                                    Converter={StaticResource ColorToBrush}}"
+                                                VerticalAlignment="Center"/>
+
+                                        <Viewbox x:Name="FolderIcon"
+                                                 Grid.Column="1"
+                                                 Width="{DynamicResource Theme.IconWidth}"
+                                                 Height="{DynamicResource Theme.IconHeight}"
+                                                 VerticalAlignment="Center">
+                                            <Canvas Width="20" Height="16">
+                                                <Path Data="M1,5 L7,5 L9,3 L1,3 Z"
+                                                      Fill="{Binding Color,
+                                                          Converter={StaticResource ColorToBrush}}"/>
+                                                <Path Data="M1,5 L1,15 L19,15 L19,5 Z"
+                                                      Fill="{Binding Color,
+                                                          Converter={StaticResource ColorToBrush}}"/>
+                                                <Path Data="M1,5 L19,5"
+                                                      Stroke="#40FFFFFF"
+                                                      StrokeThickness="1"/>
+                                            </Canvas>
+                                        </Viewbox>
+
+                                        <TextBlock x:Name="FolderLabel"
+                                                   Grid.Column="2"
+                                                   Text="{Binding Name}"
+                                                   Foreground="{DynamicResource Theme.PrimaryText}"
+                                                   FontSize="{DynamicResource Theme.FontSize}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="4,0,0,0"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
                                 </Grid>
                             </Border>
 
@@ -139,13 +161,17 @@
                                 <Setter TargetName="Row"
                                         Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
                             </Trigger>
-                            <!-- Group header: outline border, bold label, no folder icon -->
+                            <!-- Ctrl-click multi-selection highlight -->
+                            <DataTrigger Binding="{Binding IsMultiSelected}" Value="True">
+                                <Setter TargetName="Row"
+                                        Property="Background" Value="{DynamicResource Theme.ItemSelect}"/>
+                            </DataTrigger>
+                            <!-- Group header: outline border (color from MultiBinding), bold label, no folder icon -->
                             <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                <Setter TargetName="FolderIcon" Property="Visibility"  Value="Collapsed"/>
-                                <Setter TargetName="FolderLabel" Property="FontWeight" Value="SemiBold"/>
-                                <Setter TargetName="Row" Property="BorderBrush"     Value="{DynamicResource Theme.BorderSoft}"/>
-                                <Setter TargetName="Row" Property="BorderThickness" Value="1"/>
-                                <Setter TargetName="Row" Property="Padding"         Value="0,4"/>
+                                <Setter TargetName="FolderIcon"  Property="Visibility"      Value="Collapsed"/>
+                                <Setter TargetName="FolderLabel" Property="FontWeight"      Value="SemiBold"/>
+                                <Setter TargetName="Row"         Property="BorderThickness" Value="1"/>
+                                <Setter TargetName="Row"         Property="Padding"         Value="0,4"/>
                             </DataTrigger>
                             <!-- Show color bar on groups that have an explicit color set -->
                             <MultiDataTrigger>
@@ -325,12 +351,11 @@
                         </TreeView.ItemTemplate>
                         <TreeView.ContextMenu>
                             <ContextMenu x:Name="TreeCtxMenu">
-                                <MenuItem Header="Open in Explorer"  Click="CtxOpen_Click"/>
+                                <MenuItem Header="Change color…"  Click="CtxColor_Click"/>
+                                <MenuItem Header="Reset color"    Click="ColorReset_Click"/>
+                                <MenuItem Header="Rename…"        Click="CtxRename_Click"/>
                                 <Separator/>
-                                <MenuItem Header="Change color…"     Click="CtxColor_Click"/>
-                                <MenuItem Header="Rename…"           Click="CtxRename_Click"/>
-                                <Separator/>
-                                <MenuItem Header="Add folder…"       Click="CtxAdd_Click"/>
+                                <MenuItem Header="Add folder…"    Click="CtxAdd_Click"/>
                                 <MenuItem x:Name="CtxRemoveItem"
                                           Header="Remove"
                                           Click="CtxRemove_Click"/>

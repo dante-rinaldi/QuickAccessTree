@@ -30,6 +30,14 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        DispatcherUnhandledException += (_, ex) =>
+        {
+            ex.Handled = true;
+            System.Windows.MessageBox.Show(
+                $"Unexpected error:\n{ex.Exception.Message}\n\n{ex.Exception.GetType().Name}",
+                "Sidebar Buddy Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
         base.OnStartup(e);
         Settings = _settingsService.Load();
         ThemeManager.Apply(Settings.Theme);
@@ -80,23 +88,32 @@ public partial class App : System.Windows.Application
 
     public void OpenSettings()
     {
-        if (_settingsWindow != null && _settingsWindow.IsLoaded)
+        if (_settingsWindow is { IsLoaded: true })
         {
             _settingsWindow.Activate();
             return;
         }
-        _settingsWindow = new SettingsWindow(
-            Settings,
-            _settingsService,
-            _attachService,
-            onApplied: () =>
-            {
-                _mainWindow?.ReloadTree();
-                _mainWindow?.ApplyQuickLinks();
-                if (_attachService != null)
-                    _attachService.AutoHide = Settings.AutoHide;
-            });
-        _settingsWindow.Show();
+        try
+        {
+            _settingsWindow = new SettingsWindow(
+                Settings,
+                _settingsService,
+                _attachService,
+                onApplied: () =>
+                {
+                    _mainWindow?.ReloadTree();
+                    _mainWindow?.ApplyQuickLinks();
+                    if (_attachService != null)
+                        _attachService.AutoHide = Settings.AutoHide;
+                });
+            _settingsWindow.Show();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"Could not open Settings:\n{ex.Message}\n\n{ex.GetType().Name}",
+                "Sidebar Buddy", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void ForceShow()

@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private ExplorerAttachService?  _attachSvc;
 
     private FolderNode? _contextNode;   // node targeted by right-click
+    private readonly HashSet<FolderNode> _selectedNodes = new();
     private bool        _isCollapsed;
     private bool        _suppressNavigation;
     private const double ExpandedWidth  = 220;
@@ -75,7 +76,11 @@ public partial class MainWindow : Window
 
         // Groups first — synthetic paths ("§g§{guid}") are never path-ancestors of real folders
         foreach (var (synth, name) in _settings.GroupNames)
-            available[synth] = new FolderNode { Name = name, Path = synth, IsGroup = true };
+        {
+            var g = new FolderNode { Name = name, Path = synth, IsGroup = true };
+            ApplyColor(g);
+            available[synth] = g;
+        }
 
         if (_settings.ImportQuickAccess)
         {
@@ -264,8 +269,15 @@ public partial class MainWindow : Window
 
     private void RemoveBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (FolderTree.SelectedItem is FolderNode node)
+        if (_selectedNodes.Count > 1)
+        {
+            BatchRemove(_selectedNodes.ToList());
+            ClearMultiSelection();
+        }
+        else if (FolderTree.SelectedItem is FolderNode node)
+        {
             RemoveFolderNode(node);
+        }
     }
 
     private void CollapsedTab_MouseDown(object sender, MouseButtonEventArgs e)
@@ -440,6 +452,7 @@ public partial class MainWindow : Window
         string name = System.IO.Path.GetFileName(path.TrimEnd('\\', '/'));
         if (string.IsNullOrEmpty(name)) name = path.TrimEnd('\\', '/');
         _settings.CustomFolders.Add(new CustomFolder { Path = path, DisplayName = name });
+        _settings.FolderColors[path] = "#FFC000"; // Fix 3: default new folders to yellow
         _settingsSvc.Save(_settings);
         LoadTree();
     }
@@ -618,6 +631,64 @@ public partial class MainWindow : Window
         _dragStart = e.GetPosition(null);
         var tvi = (e.OriginalSource as DependencyObject)?.FindAncestorOrSelf<TreeViewItem>();
         _dragCandidate = tvi?.DataContext as FolderNode;
+
+        bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+        if (_dragCandidate != null && ctrl)
+        {
+            if (_dragCandidate.IsMultiSelected)
+            {
+                _dragCandidate.IsMultiSelected = false;
+                _selectedNodes.Remove(_dragCandidate);
+            }
+            else
+            {
+                _dragCandidate.IsMultiSelected = true;
+                _selectedNodes.Add(_dragCandidate);
+            }
+            e.Handled = true;   // keep TreeView from changing single-selection
+            _dragCandidate = null;
+        }
+        else if (!ctrl)
+        {
+            ClearMultiSelection();
+        }
+    }
+
+    private void ClearMultiSelection()
+    {
+        foreach (var n in _selectedNodes) n.IsMultiSelected = false;
+        _selectedNodes.Clear();
+    }
+
+    // Returns nodes to act on: all multi-selected (when context node is part of selection)
+    // or just the single context node.
+    private List<FolderNode> GetEffectiveTargetNodes()
+    {
+        if (_contextNode != null && _selectedNodes.Count > 1 && _selectedNodes.Contains(_contextNode))
+            return _selectedNodes.ToList();
+        return _contextNode != null ? new List<FolderNode> { _contextNode } : new List<FolderNode>();
+    }
+
+    // BFS over Placements to find all descendant FolderNodes of a group (or any parent path).
+    private IEnumerable<FolderNode> GetGroupDescendantNodes(string parentPath)
+    {
+        var result = new List<FolderNode>();
+        var queue  = new Queue<string>();
+        foreach (var p in _settings.Placements)
+            if (p.ParentPath?.Equals(parentPath, StringComparison.OrdinalIgnoreCase) == true)
+                queue.Enqueue(p.Path);
+        while (queue.Count > 0)
+        {
+            var path = queue.Dequeue();
+            if (_nodesByPath.TryGetValue(path, out var node))
+            {
+                result.Add(node);
+                foreach (var p in _settings.Placements)
+                    if (p.ParentPath?.Equals(path, StringComparison.OrdinalIgnoreCase) == true)
+                        queue.Enqueue(p.Path);
+            }
+        }
+        return result;
     }
 
     private void FolderTree_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -784,16 +855,45 @@ public partial class MainWindow : Window
         CtxRemoveItem.IsEnabled = _contextNode != null;
     }
 
-    private void CtxOpen_Click(object sender, RoutedEventArgs e)
-    {
-        if (_contextNode is { IsGroup: false } n)
-            System.Diagnostics.Process.Start("explorer.exe", n.Path);
-    }
-
     private void CtxRemove_Click(object sender, RoutedEventArgs e)
     {
-        if (_contextNode is { } n)
-            RemoveFolderNode(n);
+        var targets = GetEffectiveTargetNodes();
+        if (targets.Count > 1)
+        {
+            BatchRemove(targets);
+            ClearMultiSelection();
+        }
+        else if (targets.Count == 1)
+        {
+            RemoveFolderNode(targets[0]);
+            ClearMultiSelection();
+        }
+    }
+
+    // Removes multiple nodes in one pass then calls LoadTree() once.
+    private void BatchRemove(IList<FolderNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.IsGroup)
+            {
+                _settings.GroupNames.Remove(node.Path);
+                foreach (var p in _settings.Placements)
+                    if (p.ParentPath?.Equals(node.Path, StringComparison.OrdinalIgnoreCase) == true)
+                        p.ParentPath = null;
+                _settings.Placements.RemoveAll(
+                    p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                _settings.CustomFolders.RemoveAll(
+                    cf => cf.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+                if (!_settings.RemovedPaths.Contains(node.Path, StringComparer.OrdinalIgnoreCase))
+                    _settings.RemovedPaths.Add(node.Path);
+            }
+        }
+        _settingsSvc.Save(_settings);
+        LoadTree();
     }
 
     private void RemoveFolderNode(FolderNode node)
@@ -856,23 +956,49 @@ public partial class MainWindow : Window
 
     private void Swatch_Click(object sender, MouseButtonEventArgs e)
     {
-        if (_contextNode is not { } n) return;
-        if (sender is Border { Tag: string hex })
+        if (_contextNode == null) return;
+        if (sender is not Border { Tag: string hex }) return;
+
+        var targets = GetEffectiveTargetNodes();
+        if (targets.Count == 0) targets = new List<FolderNode> { _contextNode };
+
+        foreach (var target in targets)
         {
-            n.Color = hex;
-            _settings.FolderColors[n.Path] = hex;
-            _settingsSvc.Save(_settings);
+            target.Color = hex;
+            _settings.FolderColors[target.Path] = hex;
+
+            // Fix 1: when coloring a group, also apply to all its descendants
+            if (target.IsGroup)
+                foreach (var child in GetGroupDescendantNodes(target.Path))
+                    _settings.FolderColors[child.Path] = hex;
         }
+
+        _settingsSvc.Save(_settings);
         ColorPickerPopup.IsOpen = false;
+        LoadTree();
     }
 
     private void ColorReset_Click(object sender, RoutedEventArgs e)
     {
-        if (_contextNode is not { } n) return;
-        n.Color = null;
-        _settings.FolderColors.Remove(n.Path);
+        if (_contextNode == null) return;
+
+        var targets = GetEffectiveTargetNodes();
+        if (targets.Count == 0) targets = new List<FolderNode> { _contextNode };
+
+        foreach (var target in targets)
+        {
+            target.Color = null;
+            _settings.FolderColors.Remove(target.Path);
+
+            // Fix 1: when resetting a group, also remove color from all its descendants
+            if (target.IsGroup)
+                foreach (var child in GetGroupDescendantNodes(target.Path))
+                    _settings.FolderColors.Remove(child.Path);
+        }
+
         _settingsSvc.Save(_settings);
         ColorPickerPopup.IsOpen = false;
+        LoadTree();
     }
 
     // ── Rename ────────────────────────────────────────────────────────────

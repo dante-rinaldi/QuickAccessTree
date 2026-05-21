@@ -38,6 +38,13 @@ public class FolderNode : INotifyPropertyChanged
         set { _isExpanded = value; OnPropertyChanged(); }
     }
 
+    private bool _isMultiSelected;
+    public bool IsMultiSelected
+    {
+        get => _isMultiSelected;
+        set { _isMultiSelected = value; OnPropertyChanged(); }
+    }
+
     // True once real children have been loaded (replaces the dummy placeholder)
     public bool ChildrenLoaded { get; set; }
 
