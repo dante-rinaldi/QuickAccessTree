@@ -5,8 +5,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using SidebarBuddy.Interop;
 using SidebarBuddy.Models;
 using SidebarBuddy.Services;
 
@@ -351,6 +353,25 @@ public partial class MainWindow : Window
     private void GroupOk_Click(object sender, RoutedEventArgs e)     => CommitGroupCreate();
     private void GroupCancel_Click(object sender, RoutedEventArgs e) => GroupNamePopup.IsOpen = false;
 
+    // Remove WS_EX_NOACTIVATE from the popup's own HWND so its TextBox accepts keyboard input.
+    // WPF popups inherit NOACTIVATE from the parent window; we strip it per-popup on open.
+    private void GroupNamePopup_Opened(object sender, EventArgs e)
+        => ActivatePopupTextBox(GroupNameBox);
+
+    private void RenamePopup_Opened(object sender, EventArgs e)
+        => ActivatePopupTextBox(RenameBox);
+
+    private void ActivatePopupTextBox(TextBox box)
+    {
+        if (HwndSource.FromVisual(box) is not HwndSource src) return;
+        int ex = NativeMethods.GetWindowLong(src.Handle, NativeMethods.GWL_EXSTYLE);
+        NativeMethods.SetWindowLong(src.Handle, NativeMethods.GWL_EXSTYLE,
+            ex & ~NativeMethods.WS_EX_NOACTIVATE);
+        NativeMethods.SetForegroundWindow(src.Handle);
+        box.Focus();
+        box.SelectAll();
+    }
+
     private void CommitGroupCreate()
     {
         string name = GroupNameBox.Text.Trim();
@@ -394,7 +415,9 @@ public partial class MainWindow : Window
                 f => f.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
             return;
 
-        string name = System.IO.Path.GetFileName(path);
+        // Path.GetFileName returns "" for root drives (e.g. "C:\"); fall back to the trimmed path
+        string name = System.IO.Path.GetFileName(path.TrimEnd('\\', '/'));
+        if (string.IsNullOrEmpty(name)) name = path.TrimEnd('\\', '/');
         _settings.CustomFolders.Add(new CustomFolder { Path = path, DisplayName = name });
         _settingsSvc.Save(_settings);
         LoadTree();
@@ -501,20 +524,19 @@ public partial class MainWindow : Window
         {
             if (!enabled[i]) continue;
             var (label, path) = QuickLinkDefs[i];
-            var btn = new System.Windows.Controls.Button
+            var btn = new Button
             {
-                Content         = label,
-                Tag             = path,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Content                    = label,
+                Tag                        = path,
+                HorizontalAlignment        = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
                 Height          = 24,
                 Margin          = new Thickness(0, 1, 0, 1),
                 Cursor          = Cursors.Hand,
                 Background      = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground      = (Brush)TryFindResource("Theme.SecondaryText")
-                                  ?? Brushes.LightGray,
+                Foreground      = TryFindResource("Theme.SecondaryText") as Brush ?? Brushes.LightGray,
                 FontSize        = 11,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding         = new Thickness(8, 0, 0, 0),
             };
             btn.Click += QuickLink_Click;
@@ -524,8 +546,10 @@ public partial class MainWindow : Window
 
     private void QuickLink_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.Button { Tag: string path })
-            _attachSvc?.NavigateTo(path);
+        if (sender is Button { Tag: string path })
+            // Shell virtual folders (CLSIDs) aren't accepted by Navigate2 COM.
+            // Pass them directly to explorer.exe which handles "::{...}" syntax natively.
+            System.Diagnostics.Process.Start("explorer.exe", path);
     }
 
     // ── Header drag → move Explorer ───────────────────────────────────────
@@ -755,6 +779,8 @@ public partial class MainWindow : Window
 
     private void RemoveFolderNode(FolderNode node)
     {
+        // SAFETY: this removes only the sidebar bookmark from our settings JSON.
+        // No filesystem operations are performed — no files or folders are ever deleted.
         if (node.IsGroup)
         {
             _settings.GroupNames.Remove(node.Path);

@@ -472,7 +472,8 @@
         <Popup x:Name="RenamePopup"
                StaysOpen="False"
                AllowsTransparency="True"
-               Placement="MousePoint">
+               Placement="MousePoint"
+               Opened="RenamePopup_Opened">
             <Border Background="{DynamicResource Theme.PopupBg}"
                     BorderBrush="{DynamicResource Theme.BorderSoft}"
                     BorderThickness="1"
@@ -519,7 +520,8 @@
         <Popup x:Name="GroupNamePopup"
                StaysOpen="False"
                AllowsTransparency="True"
-               Placement="MousePoint">
+               Placement="MousePoint"
+               Opened="GroupNamePopup_Opened">
             <Border Background="{DynamicResource Theme.PopupBg}"
                     BorderBrush="{DynamicResource Theme.BorderSoft}"
                     BorderThickness="1"

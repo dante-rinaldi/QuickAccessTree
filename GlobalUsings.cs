@@ -11,3 +11,5 @@ global using DragEventArgs  = System.Windows.DragEventArgs;
 global using DragDropEffects = System.Windows.DragDropEffects;
 global using Brushes             = System.Windows.Media.Brushes;
 global using HorizontalAlignment = System.Windows.HorizontalAlignment;
+global using TextBox             = System.Windows.Controls.TextBox;
+global using Button              = System.Windows.Controls.Button;

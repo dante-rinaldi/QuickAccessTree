@@ -86,6 +86,14 @@ public class ExplorerAttachService : IDisposable
 
     private void PollOnUI()
     {
+        // If the Explorer window we were attached to has been closed, detach and hide
+        if (_explorerHwnd != nint.Zero && !NativeMethods.IsWindow(_explorerHwnd))
+        {
+            _explorerHwnd = nint.Zero;
+            HideSidebar();
+            return;
+        }
+
         nint fg = NativeMethods.GetForegroundWindow();
         if (fg == nint.Zero) return;
 
