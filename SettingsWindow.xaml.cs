@@ -82,10 +82,11 @@ public partial class SettingsWindow : Window
         RbThemeDark.IsChecked   = _settings.Theme == ThemeMode.Dark;
         RbThemeLight.IsChecked  = _settings.Theme == ThemeMode.Light;
 
-        // Appearance — skin
-        int skinIdx = (int)_settings.Skin;
-        if (skinIdx >= 0 && skinIdx < SkinList.Items.Count)
-            SkinList.SelectedIndex = skinIdx;
+        // Appearance — skin (matched by Tag, falls back to first item)
+        string skinName = _settings.Skin.ToString();
+        SkinList.SelectedItem = SkinList.Items.OfType<ListBoxItem>()
+            .FirstOrDefault(i => i.Tag?.ToString() == skinName)
+            ?? SkinList.Items[0];
 
         // Appearance — font scale
         FontScaleSlider.Value = _settings.FontScale;
@@ -157,7 +158,8 @@ public partial class SettingsWindow : Window
     private void Skin_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_loading) return;
-        var skin = (AppSkin)SkinList.SelectedIndex;
+        if (SkinList.SelectedItem is not ListBoxItem { Tag: string tag }) return;
+        if (!Enum.TryParse<AppSkin>(tag, out var skin)) return;
         UpdateCustomUploadPanelState(skin);
         ApplySkinDefaults(skin);
         LiveApply();
@@ -259,8 +261,9 @@ public partial class SettingsWindow : Window
         ThemeManager.Apply(newTheme);
 
         // Appearance — skin
-        if (SkinList.SelectedIndex >= 0)
-            _settings.Skin = (AppSkin)SkinList.SelectedIndex;
+        if (SkinList.SelectedItem is ListBoxItem { Tag: string skinTag } &&
+            Enum.TryParse<AppSkin>(skinTag, out var selectedSkin))
+            _settings.Skin = selectedSkin;
         ThemeManager.ApplySkin(_settings.Skin);
 
         // Live-apply service changes
@@ -395,8 +398,10 @@ public partial class SettingsWindow : Window
         _settings.CustomImagePath = dlg.FileName;
         CustomImagePathBox.Text   = dlg.FileName;
         // Auto-switch to Custom skin
-        if (SkinList.SelectedIndex != (int)AppSkin.Custom)
-            SkinList.SelectedIndex = (int)AppSkin.Custom; // fires Skin_Changed → LiveApply
+        var customItem = SkinList.Items.OfType<ListBoxItem>()
+            .FirstOrDefault(i => i.Tag?.ToString() == nameof(AppSkin.Custom));
+        if (customItem != null && SkinList.SelectedItem != customItem)
+            SkinList.SelectedItem = customItem; // fires Skin_Changed → LiveApply
         else
             LiveApply();
     }
@@ -436,7 +441,7 @@ public partial class SettingsWindow : Window
     // ── License ───────────────────────────────────────────────────────
 
     private void BuyNow_Click(object sender, RoutedEventArgs e)
-        => OpenUrl("https://sidebarbuddy.com/buy");
+        => OpenUrl("https://sidebarbuddy.com/#pricing");
 
     private void MyAccount_Click(object sender, RoutedEventArgs e)
         => OpenUrl("https://sidebarbuddy.com/account");
@@ -453,28 +458,42 @@ public partial class SettingsWindow : Window
         });
     }
 
-    private void ActivateLicense_Click(object sender, RoutedEventArgs e)
+    private async void ActivateLicense_Click(object sender, RoutedEventArgs e)
     {
         LicenseErrorText.Visibility = Visibility.Collapsed;
-        string key = LicenseKeyBox.Text.Trim().ToUpperInvariant();
-        if (string.IsNullOrEmpty(key)) return;
 
-        if (IsValidLicenseKey(key))
+        string email = LicenseEmailBox.Text.Trim();
+        string key   = LicenseKeyBox.Text.Trim().ToUpperInvariant();
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(key))
         {
-            _settings.IsRegistered = true;
-            _settings.LicenseKey   = key;
+            LicenseErrorText.Text       = "Please enter both your email address and license key.";
+            LicenseErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
+        ActivateBtn.IsEnabled = false;
+        ActivateBtn.Content   = "Checking…";
+
+        var (valid, error) = await LicenseService.ValidateLicenseAsync(email, key);
+
+        ActivateBtn.IsEnabled = true;
+        ActivateBtn.Content   = "Activate";
+
+        if (valid)
+        {
+            _settings.IsRegistered    = true;
+            _settings.LicenseKey      = key;
+            _settings.RegisteredEmail = email;
             _settingsSvc.Save(_settings);
-            LicenseKeyBox.Text = string.Empty;
+            LicenseEmailBox.Text = string.Empty;
+            LicenseKeyBox.Text   = string.Empty;
             RefreshLicensePanel();
         }
         else
         {
-            LicenseErrorText.Text       = "Invalid license key. Please check and try again.";
+            LicenseErrorText.Text       = error ?? "Activation failed. Please check your email and key.";
             LicenseErrorText.Visibility = Visibility.Visible;
         }
     }
-
-    // Placeholder — replace with real HMAC / server validation
-    private static bool IsValidLicenseKey(string key)
-        => key.Length >= 16 && key.Contains('-');
 }

@@ -3,3 +3,8 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.idea/
+site/private/
+site/logs/
+site/source/
+bugs/

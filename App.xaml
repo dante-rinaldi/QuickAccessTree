@@ -15,7 +15,9 @@
         <SolidColorBrush x:Key="Theme.PrimaryText"   Color="#DCDCDC"/>
         <SolidColorBrush x:Key="Theme.SecondaryText" Color="#CCCCCC"/>
         <SolidColorBrush x:Key="Theme.DimText"       Color="#707070"/>
-        <SolidColorBrush x:Key="Theme.ScrollThumb"   Color="#555555"/>
+        <SolidColorBrush x:Key="Theme.ScrollThumb"     Color="#555555"/>
+        <SolidColorBrush x:Key="Theme.QuickLinkHover" Color="#1E3247"/>
+        <SolidColorBrush x:Key="Theme.QuickLinkPress" Color="#254060"/>
         <!-- Font/icon scale — updated at runtime by ThemeManager.ApplyFontScale() -->
         <sys:Double x:Key="Theme.FontSize">12</sys:Double>
         <sys:Double x:Key="Theme.IconWidth">16</sys:Double>

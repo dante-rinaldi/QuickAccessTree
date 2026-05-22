@@ -7,7 +7,7 @@ public enum ShowDelay            { Instant, HalfSecond, TwoSeconds, FiveSeconds 
 public enum ThemeMode            { System, Dark, Light }
 public enum AppSkin
 {
-    SolidDark, SolidLight, FrostedGlass, Mica,
+    None, SolidDark, SolidLight, FrostedGlass, Mica,
     NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast,
     Custom
 }
@@ -37,7 +37,7 @@ public class AppSettings
 
     // Appearance
     public ThemeMode Theme     { get; set; } = ThemeMode.System;
-    public AppSkin   Skin      { get; set; } = AppSkin.SolidDark;
+    public AppSkin   Skin      { get; set; } = AppSkin.None;
     public double    FontScale { get; set; } = 1.0;
 
     // Customization
@@ -55,9 +55,10 @@ public class AppSettings
     public QuickLinkPosition QuickLinksPosition { get; set; } = QuickLinkPosition.Bottom;
 
     // License / trial
-    public DateTime TrialStartDate { get; set; } = DateTime.UtcNow;
-    public bool     IsRegistered   { get; set; } = false;
-    public string?  LicenseKey     { get; set; }
+    public DateTime TrialStartDate  { get; set; } = DateTime.UtcNow;
+    public bool     IsRegistered    { get; set; } = false;
+    public string?  LicenseKey      { get; set; }
+    public string?  RegisteredEmail { get; set; }
 }
 
 public class CustomFolder

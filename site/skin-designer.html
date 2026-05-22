@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sidebar Buddy — Skin Designer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #dcdcdc;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ─────────────────────────────────────────────────── */
+  .topbar {
+    background: #16213e;
+    border-bottom: 1px solid #0f3460;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .topbar h1 { font-size: 14px; font-weight: 600; color: #9cdcfe; white-space: nowrap; }
+  .topbar select {
+    background: #252540;
+    color: #dcdcdc;
+    border: 1px solid #444466;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .topbar select:focus { outline: 2px solid #569cd6; }
+  .topbar label { font-size: 11px; color: #778; white-space: nowrap; }
+  .topbar-sep { width: 1px; height: 22px; background: #2a2a50; flex-shrink: 0; margin: 0 2px; }
+  .topbar .spacer { flex: 1; min-width: 4px; }
+  .btn-export {
+    background: #0e639c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-export:hover { background: #1177bb; }
+  .btn-reset {
+    background: #3c3c3c;
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-reset:hover { background: #505050; }
+  .btn-image {
+    background: #252540;
+    color: #aaa;
+    border: 1px solid #444466;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-image:hover { background: #303050; color: #ddd; }
+  .opacity-group { display: flex; align-items: center; gap: 6px; }
+  .opacity-group input[type=range] {
+    width: 80px;
+    cursor: pointer;
+    accent-color: #569cd6;
+  }
+  .opacity-val { font-size: 11px; color: #9cdcfe; min-width: 32px; font-variant-numeric: tabular-nums; }
+
+  /* ── Main layout ─────────────────────────────────────────────── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Preview panel ───────────────────────────────────────────── */
+  .preview-col {
+    width: 300px;
+    flex-shrink: 0;
+    background: #111122;
+    border-right: 1px solid #2a2a50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 14px;
+    gap: 14px;
+    overflow-y: auto;
+  }
+  .preview-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #556;
+    align-self: flex-start;
+  }
+
+  /* ── Sidebar mock ────────────────────────────────────────────── */
+  .sidebar-mock {
+    width: 216px;
+    height: 420px;
+    border-radius: 6px 0 0 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    font-size: 12px;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Header */
+  .mock-header {
+    background: var(--headerBg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+  .mock-title {
+    flex: 1;
+    color: var(--secondaryText);
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .mock-icon-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dimText);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .mock-icon-btn:hover { background: var(--itemHover); color: var(--primaryText); }
+
+  /* Body */
+  .mock-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Color overlay — sits between the bg image and the content */
+  .mock-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--sidebarBg);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.1s;
+  }
+
+  .mock-tree {
+    flex: 1;
+    overflow-y: scroll;
+    padding: 4px 0;
+    position: relative;
+    z-index: 1;
+  }
+  /* Custom thin scrollbar */
+  .mock-tree::-webkit-scrollbar { width: 6px; }
+  .mock-tree::-webkit-scrollbar-track { background: transparent; }
+  .mock-tree::-webkit-scrollbar-thumb { background: var(--scrollThumb); border-radius: 3px; }
+  .mock-tree::-webkit-scrollbar-thumb:hover { background: var(--secondaryText); }
+
+  /* Tree rows */
+  .tree-row {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 6px;
+    cursor: pointer;
+    color: var(--primaryText);
+    gap: 4px;
+    position: relative;
+  }
+  .tree-row:hover { background: var(--itemHover); }
+  .tree-row.selected { background: var(--itemSelect); }
+  .tree-row .indent { display: inline-block; width: 12px; flex-shrink: 0; }
+  .tree-row .arrow { font-size: 8px; color: var(--dimText); flex-shrink: 0; width: 10px; }
+  .tree-row .icon { flex-shrink: 0; font-size: 12px; }
+  .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Group row */
+  .tree-row.group {
+    font-weight: 700;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin: 2px 4px;
+    padding: 0 6px;
+    background: transparent;
+    color: var(--primaryText);
+  }
+  .tree-row.group:hover { border-color: var(--borderSoft); background: var(--itemHover); }
+  .group-pill {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: #FFC000;
+    flex-shrink: 0;
+  }
+
+  /* Divider between sections */
+  .tree-divider {
+    height: 1px;
+    background: var(--borderSoft);
+    margin: 5px 10px;
+    opacity: 0.6;
+  }
+
+  /* Quick links bar */
+  .mock-quicklinks {
+    background: var(--headerBg);
+    border-top: 1px solid var(--border);
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+  .quicklink-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--secondaryText);
+    font-size: 11px;
+  }
+  .quicklink-btn:hover { background: var(--quickLinkHover); }
+  .quicklink-btn:active { background: var(--quickLinkPress); }
+
+  /* ── Hover demo ──────────────────────────────────────────────── */
+  .demo-section {
+    width: 216px;
+  }
+  .demo-section .demo-label {
+    font-size: 10px;
+    color: #556;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .demo-chip {
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+  }
+  .demo-chip.hover    { background: var(--itemHover);      color: var(--primaryText); }
+  .demo-chip.select   { background: var(--itemSelect);     color: var(--primaryText); }
+  .demo-chip.ql-hover { background: var(--quickLinkHover); color: var(--secondaryText); }
+  .demo-chip.ql-press { background: var(--quickLinkPress); color: var(--secondaryText); }
+
+  /* Popup demo */
+  .demo-popup {
+    background: var(--popupBg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 0;
+    margin-top: 6px;
+  }
+  .popup-item {
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--primaryText);
+    cursor: pointer;
+  }
+  .popup-item:hover { background: var(--itemHover); }
+  .popup-sep { height: 1px; background: var(--borderSoft); margin: 2px 0; }
+
+  /* ── Controls panel ──────────────────────────────────────────── */
+  .controls-col {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .section-header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #9cdcfe;
+    padding: 14px 0 8px;
+    border-bottom: 1px solid #2a2a50;
+    margin-bottom: 10px;
+  }
+  .section-header:first-child { padding-top: 4px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .row label {
+    font-size: 12px;
+    color: #aaa;
+    width: 200px;
+    flex-shrink: 0;
+  }
+  .row input[type=color] {
+    width: 36px;
+    height: 28px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 1px;
+    background: #252540;
+    flex-shrink: 0;
+  }
+  .hex-input {
+    width: 82px;
+    background: #1e1e30;
+    color: #dcdcdc;
+    border: 1px solid #444466;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+  }
+  .hex-input:focus { outline: 2px solid #569cd6; }
+
+  /* ── Export modal ────────────────────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1e1e2e;
+    border: 1px solid #444466;
+    border-radius: 8px;
+    width: 680px;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid #333355;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modal-head h2 { font-size: 14px; font-weight: 600; flex: 1; }
+  .modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .modal-close:hover { color: #ddd; }
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+  }
+  .modal-body pre {
+    background: #0d0d1a;
+    border: 1px solid #333355;
+    border-radius: 4px;
+    padding: 12px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 12px;
+    color: #c8e6ff;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .modal-foot {
+    padding: 12px 16px;
+    border-top: 1px solid #333355;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .btn-copy {
+    background: #0e639c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-copy:hover { background: #1177bb; }
+  .btn-copy.copied { background: #3a7a3a; }
+</style>
+</head>
+<body>
+
+<!-- ── Top bar ──────────────────────────────────────────────────── -->
+<div class="topbar">
+  <h1>Sidebar Buddy — Skin Designer</h1>
+  <label>Preset:</label>
+  <select id="presetSelect" onchange="loadPreset(this.value)">
+    <option value="DarkTheme">Dark Theme (None)</option>
+    <option value="LightTheme">Light Theme (None)</option>
+    <option value="FrostedGlass">Frosted Glass</option>
+    <option value="Mica">Mica</option>
+    <option value="NeonCyber">Neon Cyber</option>
+    <option value="Terminal">Terminal</option>
+    <option value="Paper">Paper</option>
+    <option value="Synthwave">Synthwave</option>
+    <option value="BrushedMetal">Brushed Metal</option>
+    <option value="HighContrast">High Contrast</option>
+  </select>
+  <button class="btn-reset" onclick="loadPreset(document.getElementById('presetSelect').value)">Reset to Preset</button>
+
+  <div class="topbar-sep"></div>
+
+  <label>BG Image:</label>
+  <button class="btn-image" onclick="document.getElementById('bgFileInput').click()">📂 Load…</button>
+  <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="loadBgImage(this)">
+  <button class="btn-image" id="clearBgBtn" onclick="clearBgImage()" style="display:none">✕ Clear</button>
+
+  <div class="opacity-group">
+    <label>Opacity:</label>
+    <input type="range" id="bgOpacityRange" min="0" max="100" value="100" oninput="setBgOpacity(this.value)">
+    <span class="opacity-val" id="bgOpacityVal">100%</span>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn-export" onclick="openExport()">📋 Generate C# Code</button>
+</div>
+
+<!-- ── Main ─────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Preview -->
+  <div class="preview-col">
+    <div class="preview-label">Live Preview</div>
+
+    <div class="sidebar-mock">
+      <!-- Header -->
+      <div class="mock-header">
+        <span class="mock-title">Sidebar Buddy</span>
+        <div class="mock-icon-btn">⚙</div>
+        <div class="mock-icon-btn">🗑</div>
+        <div class="mock-icon-btn">⇄</div>
+        <div class="mock-icon-btn">◀</div>
+      </div>
+      <!-- Body -->
+      <div class="mock-body" id="mockBody">
+        <!-- bg image sits on the element itself; this overlay is the color layer -->
+        <div class="mock-bg-overlay" id="bgOverlay"></div>
+
+        <div class="mock-tree">
+          <!-- Group: Work -->
+          <div class="tree-row group">
+            <div class="group-pill"></div>
+            <span class="name">🗂 WORK</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow">▼</span>
+            <span class="icon">📁</span>
+            <span class="name">Projects</span>
+          </div>
+          <div class="tree-row selected">
+            <div class="indent"></div>
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">SidebarBuddy</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">ClientPortal</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Designs</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Invoices 2026</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Contracts</span>
+          </div>
+
+          <div class="tree-divider"></div>
+
+          <!-- Group: Personal -->
+          <div class="tree-row group" style="margin-top:2px">
+            <div class="group-pill" style="background:#AA00FF"></div>
+            <span class="name">🎵 PERSONAL</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow">▶</span>
+            <span class="icon">📁</span>
+            <span class="name">Music</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Photos</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Downloads</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Videos</span>
+          </div>
+
+          <div class="tree-divider"></div>
+
+          <!-- Group: Archive -->
+          <div class="tree-row group" style="margin-top:2px">
+            <div class="group-pill" style="background:#22aa55"></div>
+            <span class="name">📦 ARCHIVE</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">2025 Projects</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">2024 Projects</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Old Invoices</span>
+          </div>
+          <div class="tree-row">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name">Backups</span>
+          </div>
+        </div>
+
+        <!-- Quick links (bottom) -->
+        <div class="mock-quicklinks">
+          <div class="quicklink-btn">💻&nbsp; This PC</div>
+          <div class="quicklink-btn">⚙&nbsp; Control Panel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State demos -->
+    <div class="demo-section">
+      <div class="demo-label">States</div>
+      <div class="demo-grid">
+        <div class="demo-chip hover">Folder Hover</div>
+        <div class="demo-chip select">Folder Selected</div>
+        <div class="demo-chip ql-hover">QuickLink Hover</div>
+        <div class="demo-chip ql-press">QuickLink Press</div>
+      </div>
+      <div class="demo-popup" style="margin-top:10px">
+        <div class="popup-item">Change color</div>
+        <div class="popup-item">Rename</div>
+        <div class="popup-sep"></div>
+        <div class="popup-item">Remove</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-col">
+
+    <div class="section-header">Frame</div>
+
+    <div class="row">
+      <label>Sidebar Background</label>
+      <input type="color" id="c_sidebarBg" oninput="sync('sidebarBg',this.value)">
+      <input type="text" class="hex-input" id="h_sidebarBg" oninput="syncHex('sidebarBg',this.value)" placeholder="#1E1E1E">
+    </div>
+    <div class="row">
+      <label>Header / Title Bar Background</label>
+      <input type="color" id="c_headerBg" oninput="sync('headerBg',this.value)">
+      <input type="text" class="hex-input" id="h_headerBg" oninput="syncHex('headerBg',this.value)" placeholder="#252526">
+    </div>
+    <div class="row">
+      <label>Primary Border (accents, group outlines)</label>
+      <input type="color" id="c_border" oninput="sync('border',this.value)">
+      <input type="text" class="hex-input" id="h_border" oninput="syncHex('border',this.value)" placeholder="#3C3C3C">
+    </div>
+    <div class="row">
+      <label>Soft Border (separators, dividers)</label>
+      <input type="color" id="c_borderSoft" oninput="sync('borderSoft',this.value)">
+      <input type="text" class="hex-input" id="h_borderSoft" oninput="syncHex('borderSoft',this.value)" placeholder="#555555">
+    </div>
+
+    <div class="section-header">Text</div>
+
+    <div class="row">
+      <label>Primary Text (folder labels)</label>
+      <input type="color" id="c_primaryText" oninput="sync('primaryText',this.value)">
+      <input type="text" class="hex-input" id="h_primaryText" oninput="syncHex('primaryText',this.value)" placeholder="#DCDCDC">
+    </div>
+    <div class="row">
+      <label>Secondary Text (title bar, quick links)</label>
+      <input type="color" id="c_secondaryText" oninput="sync('secondaryText',this.value)">
+      <input type="text" class="hex-input" id="h_secondaryText" oninput="syncHex('secondaryText',this.value)" placeholder="#CCCCCC">
+    </div>
+    <div class="row">
+      <label>Dim Text (header icons, arrows)</label>
+      <input type="color" id="c_dimText" oninput="sync('dimText',this.value)">
+      <input type="text" class="hex-input" id="h_dimText" oninput="syncHex('dimText',this.value)" placeholder="#707070">
+    </div>
+
+    <div class="section-header">Folder Row Highlights</div>
+
+    <div class="row">
+      <label>Hover Background</label>
+      <input type="color" id="c_itemHover" oninput="sync('itemHover',this.value)">
+      <input type="text" class="hex-input" id="h_itemHover" oninput="syncHex('itemHover',this.value)" placeholder="#2D2D30">
+    </div>
+    <div class="row">
+      <label>Selected Background</label>
+      <input type="color" id="c_itemSelect" oninput="sync('itemSelect',this.value)">
+      <input type="text" class="hex-input" id="h_itemSelect" oninput="syncHex('itemSelect',this.value)" placeholder="#37373D">
+    </div>
+
+    <div class="section-header">Quick Links (This PC / Control Panel)</div>
+
+    <div class="row">
+      <label>Hover Background</label>
+      <input type="color" id="c_quickLinkHover" oninput="sync('quickLinkHover',this.value)">
+      <input type="text" class="hex-input" id="h_quickLinkHover" oninput="syncHex('quickLinkHover',this.value)" placeholder="#1E3247">
+    </div>
+    <div class="row">
+      <label>Press Background</label>
+      <input type="color" id="c_quickLinkPress" oninput="sync('quickLinkPress',this.value)">
+      <input type="text" class="hex-input" id="h_quickLinkPress" oninput="syncHex('quickLinkPress',this.value)" placeholder="#254060">
+    </div>
+
+    <div class="section-header">Other</div>
+
+    <div class="row">
+      <label>Popup / Context Menu Background</label>
+      <input type="color" id="c_popupBg" oninput="sync('popupBg',this.value)">
+      <input type="text" class="hex-input" id="h_popupBg" oninput="syncHex('popupBg',this.value)" placeholder="#2D2D30">
+    </div>
+    <div class="row">
+      <label>Scrollbar Thumb</label>
+      <input type="color" id="c_scrollThumb" oninput="sync('scrollThumb',this.value)">
+      <input type="text" class="hex-input" id="h_scrollThumb" oninput="syncHex('scrollThumb',this.value)" placeholder="#555555">
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Export modal ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Generated C# — paste into ThemeManager.cs</h2>
+      <button class="modal-close" onclick="closeExport()">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre id="exportCode"></pre>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-reset" onclick="closeExport()">Close</button>
+      <button class="btn-copy" id="copyBtn" onclick="copyCode()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Skin presets ─────────────────────────────────────────────────
+// bgOpacity matches ThemeManager.GetSkinDefault() values (0–1 float → 0–100%)
+const PRESETS = {
+  DarkTheme: {
+    sidebarBg:'#1E1E1E', headerBg:'#252526', popupBg:'#2D2D30',
+    border:'#3C3C3C', borderSoft:'#555555',
+    itemHover:'#2D2D30', itemSelect:'#37373D',
+    primaryText:'#DCDCDC', secondaryText:'#CCCCCC', dimText:'#707070',
+    scrollThumb:'#555555',
+    quickLinkHover:'#1E3247', quickLinkPress:'#254060',
+    bgOpacity: 100,
+  },
+  LightTheme: {
+    sidebarBg:'#F5F5F5', headerBg:'#EBEBEB', popupBg:'#FFFFFF',
+    border:'#D0D0D0', borderSoft:'#BBBBBB',
+    itemHover:'#E0E0E0', itemSelect:'#CECED8',
+    primaryText:'#1A1A1A', secondaryText:'#333333', dimText:'#777777',
+    scrollThumb:'#AAAAAA',
+    quickLinkHover:'#CCD8E8', quickLinkPress:'#B8C8D8',
+    bgOpacity: 100,
+  },
+  FrostedGlass: {
+    sidebarBg:'#0A2050', headerBg:'#071838', popupBg:'#18202E',
+    border:'#5AB8FF', borderSoft:'#3078AA',
+    itemHover:'#2565B8', itemSelect:'#2A72CC',
+    primaryText:'#E8F0FF', secondaryText:'#CCD8F0', dimText:'#6888A8',
+    scrollThumb:'#387099',
+    quickLinkHover:'#1A4A88', quickLinkPress:'#2058A0',
+    bgOpacity: 20,
+  },
+  Mica: {
+    sidebarBg:'#F5F5F8', headerBg:'#EDEDF0', popupBg:'#FFFFFF',
+    border:'#C0C0C8', borderSoft:'#B0B0B8',
+    itemHover:'#E0E0E8', itemSelect:'#CCCCDA',
+    primaryText:'#FFFFFF', secondaryText:'#DDDDDD', dimText:'#999999',
+    scrollThumb:'#AAAAAA',
+    quickLinkHover:'#C0D0E4', quickLinkPress:'#A8BCD4',
+    bgOpacity: 90,
+  },
+  NeonCyber: {
+    sidebarBg:'#0A0E14', headerBg:'#0D1117', popupBg:'#161B22',
+    border:'#0088AA', borderSoft:'#1A3040',
+    itemHover:'#0D1F2D', itemSelect:'#163240',
+    primaryText:'#00FFFF', secondaryText:'#80DFFF', dimText:'#305060',
+    scrollThumb:'#004455',
+    quickLinkHover:'#092A3D', quickLinkPress:'#10384D',
+    bgOpacity: 40,
+  },
+  Terminal: {
+    sidebarBg:'#0C0C0C', headerBg:'#111111', popupBg:'#1A1A1A',
+    border:'#008800', borderSoft:'#1A2A1A',
+    itemHover:'#0A1F0A', itemSelect:'#143314',
+    primaryText:'#00FF41', secondaryText:'#00CC33', dimText:'#2A5C2A',
+    scrollThumb:'#1A4A1A',
+    quickLinkHover:'#082808', quickLinkPress:'#0F380F',
+    bgOpacity: 60,
+  },
+  Paper: {
+    sidebarBg:'#FAF7F2', headerBg:'#F0EBE3', popupBg:'#FFFDF9',
+    border:'#D4C5B0', borderSoft:'#BFB09A',
+    itemHover:'#EEE8DF', itemSelect:'#E0D9CE',
+    primaryText:'#2C2416', secondaryText:'#4A3D2D', dimText:'#8C7B66',
+    scrollThumb:'#B0A090',
+    quickLinkHover:'#D8C8B0', quickLinkPress:'#C8B8A0',
+    bgOpacity: 100,
+  },
+  Synthwave: {
+    sidebarBg:'#0D0717', headerBg:'#130B20', popupBg:'#1A1028',
+    border:'#AA00FF', borderSoft:'#2A1040',
+    itemHover:'#1A0A30', itemSelect:'#251040',
+    primaryText:'#FF71CE', secondaryText:'#B967FF', dimText:'#4A2070',
+    scrollThumb:'#3A1060',
+    quickLinkHover:'#220844', quickLinkPress:'#2E0A58',
+    bgOpacity: 25,
+  },
+  BrushedMetal: {
+    sidebarBg:'#242628', headerBg:'#2E3033', popupBg:'#323437',
+    border:'#5A5F65', borderSoft:'#6A7075',
+    itemHover:'#2E3235', itemSelect:'#383D42',
+    primaryText:'#D8DCE0', secondaryText:'#B8BFC5', dimText:'#6A7078',
+    scrollThumb:'#5A6068',
+    quickLinkHover:'#3A4048', quickLinkPress:'#454C58',
+    bgOpacity: 55,
+  },
+  HighContrast: {
+    sidebarBg:'#000000', headerBg:'#000000', popupBg:'#000000',
+    border:'#FFFFFF', borderSoft:'#FFFFFF',
+    itemHover:'#1A1A1A', itemSelect:'#3399FF',
+    primaryText:'#FFFFFF', secondaryText:'#FFFFFF', dimText:'#FFFF00',
+    scrollThumb:'#FFFFFF',
+    quickLinkHover:'#1A1A1A', quickLinkPress:'#333333',
+    bgOpacity: 100,
+  },
+};
+
+// ── CSS variable map ─────────────────────────────────────────────
+const CSS_VAR = {
+  sidebarBg:      '--sidebarBg',
+  headerBg:       '--headerBg',
+  popupBg:        '--popupBg',
+  border:         '--border',
+  borderSoft:     '--borderSoft',
+  itemHover:      '--itemHover',
+  itemSelect:     '--itemSelect',
+  primaryText:    '--primaryText',
+  secondaryText:  '--secondaryText',
+  dimText:        '--dimText',
+  scrollThumb:    '--scrollThumb',
+  quickLinkHover: '--quickLinkHover',
+  quickLinkPress: '--quickLinkPress',
+};
+
+const C_SHARP_KEY = {
+  sidebarBg:      'Theme.SidebarBg',
+  headerBg:       'Theme.HeaderBg',
+  popupBg:        'Theme.PopupBg',
+  border:         'Theme.BorderBrush',
+  borderSoft:     'Theme.BorderSoft',
+  itemHover:      'Theme.ItemHover',
+  itemSelect:     'Theme.ItemSelect',
+  primaryText:    'Theme.PrimaryText',
+  secondaryText:  'Theme.SecondaryText',
+  dimText:        'Theme.DimText',
+  scrollThumb:    'Theme.ScrollThumb',
+  quickLinkHover: 'Theme.QuickLinkHover',
+  quickLinkPress: 'Theme.QuickLinkPress',
+};
+
+let current = {};
+
+// ── Apply CSS variables to preview ───────────────────────────────
+function applyCSS(vals) {
+  const root = document.documentElement;
+  for (const [k, cssVar] of Object.entries(CSS_VAR)) {
+    root.style.setProperty(cssVar, vals[k] ?? '#ff00ff');
+  }
+}
+
+// ── Sync from color picker ────────────────────────────────────────
+function sync(key, hex) {
+  current[key] = hex;
+  applyCSS(current);
+  const hi = document.getElementById('h_' + key);
+  if (hi) hi.value = hex.toUpperCase();
+}
+
+// ── Sync from hex text input ──────────────────────────────────────
+function syncHex(key, val) {
+  const clean = val.trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+    current[key] = clean;
+    applyCSS(current);
+    const ci = document.getElementById('c_' + key);
+    if (ci) ci.value = clean;
+  }
+}
+
+// ── Load preset ───────────────────────────────────────────────────
+function loadPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  current = { ...p };
+  applyCSS(current);
+  for (const key of Object.keys(CSS_VAR)) {
+    const ci = document.getElementById('c_' + key);
+    const hi = document.getElementById('h_' + key);
+    const val = current[key] ?? '#000000';
+    if (ci) ci.value = val;
+    if (hi) hi.value = val.toUpperCase();
+  }
+  // Apply the preset's default BG opacity
+  const opacity = p.bgOpacity ?? 100;
+  document.getElementById('bgOpacityRange').value = opacity;
+  setBgOpacity(opacity, /*skipSliderUpdate*/ true);
+}
+
+// ── Background image loading ──────────────────────────────────────
+function loadBgImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('mockBody').style.backgroundImage = `url(${e.target.result})`;
+    document.getElementById('clearBgBtn').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearBgImage() {
+  document.getElementById('mockBody').style.backgroundImage = '';
+  document.getElementById('bgFileInput').value = '';
+  document.getElementById('clearBgBtn').style.display = 'none';
+}
+
+// ── Background opacity ────────────────────────────────────────────
+function setBgOpacity(val, skipSliderUpdate) {
+  const pct = parseInt(val);
+  document.getElementById('bgOverlay').style.opacity = (pct / 100).toFixed(2);
+  document.getElementById('bgOpacityVal').textContent = pct + '%';
+  if (!skipSliderUpdate) {
+    document.getElementById('bgOpacityRange').value = pct;
+  }
+}
+
+// ── Hex → R G B bytes string ──────────────────────────────────────
+function hexToRGB(hex) {
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `0x${r.toString(16).padStart(2,'0').toUpperCase()}, 0x${g.toString(16).padStart(2,'0').toUpperCase()}, 0x${b.toString(16).padStart(2,'0').toUpperCase()}`;
+}
+
+// ── Generate C# code ──────────────────────────────────────────────
+function openExport() {
+  const skinName = document.getElementById('presetSelect').value;
+  const lines = [];
+  const pad = (s, n) => s.padEnd(n,' ');
+
+  lines.push(`case AppSkin.${skinName}:`);
+  lines.push(`    ClearAcrylic();`);
+
+  const maxKey = Math.max(...Object.values(C_SHARP_KEY).map(k => k.length));
+
+  for (const [field, csKey] of Object.entries(C_SHARP_KEY)) {
+    const hex = current[field] ?? '#000000';
+    const rgb = hexToRGB(hex);
+    lines.push(`    Brush(r, ${pad('"' + csKey + '",', maxKey+3)} ${rgb});`);
+  }
+  lines.push(`    break;`);
+
+  document.getElementById('exportCode').textContent = lines.join('\n');
+  document.getElementById('exportModal').classList.add('open');
+  document.getElementById('copyBtn').textContent = '📋 Copy to Clipboard';
+  document.getElementById('copyBtn').classList.remove('copied');
+}
+
+function closeExport() {
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function copyCode() {
+  const code = document.getElementById('exportCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+  });
+}
+
+// Close modal on overlay click
+document.getElementById('exportModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeExport();
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+loadPreset('DarkTheme');
+</script>
+</body>
+</html>

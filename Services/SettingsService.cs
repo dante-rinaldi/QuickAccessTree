@@ -33,6 +33,9 @@ public class SettingsService
                 // JSON deserialization produces a case-sensitive dict; re-wrap so path
                 // lookups are case-insensitive (Windows paths are case-insensitive).
                 s.FolderColors = new Dictionary<string, string>(s.FolderColors, StringComparer.OrdinalIgnoreCase);
+                // Migrate legacy skins removed from the UI — they are identical to None.
+                if (s.Skin == AppSkin.SolidDark || s.Skin == AppSkin.SolidLight)
+                    s.Skin = AppSkin.None;
                 return s;
             }
         }

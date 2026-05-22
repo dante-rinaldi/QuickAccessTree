@@ -463,17 +463,16 @@
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource SkinItem}"/>
                             </ListBox.ItemContainerStyle>
-                            <ListBoxItem Content="Solid Dark"/>
-                            <ListBoxItem Content="Solid Light"/>
-                            <ListBoxItem Content="Frosted Glass"/>
-                            <ListBoxItem Content="Mica"/>
-                            <ListBoxItem Content="Neon Cyber"/>
-                            <ListBoxItem Content="Terminal"/>
-                            <ListBoxItem Content="Paper"/>
-                            <ListBoxItem Content="Synthwave"/>
-                            <ListBoxItem Content="Brushed Metal"/>
-                            <ListBoxItem Content="High Contrast"/>
-                            <ListBoxItem Content="Custom"/>
+                            <ListBoxItem Content="None (Theme Default)" Tag="None"/>
+                            <ListBoxItem Content="Frosted Glass"        Tag="FrostedGlass"/>
+                            <ListBoxItem Content="Mica"                 Tag="Mica"/>
+                            <ListBoxItem Content="Neon Cyber"           Tag="NeonCyber"/>
+                            <ListBoxItem Content="Terminal"             Tag="Terminal"/>
+                            <ListBoxItem Content="Paper"                Tag="Paper"/>
+                            <ListBoxItem Content="Synthwave"            Tag="Synthwave"/>
+                            <ListBoxItem Content="Brushed Metal"        Tag="BrushedMetal"/>
+                            <ListBoxItem Content="High Contrast"        Tag="HighContrast"/>
+                            <ListBoxItem Content="Custom"               Tag="Custom"/>
                         </ListBox>
 
                         <!-- ── CUSTOMIZATION ──────────────────────────── -->
@@ -650,8 +649,26 @@
                         </StackPanel>
 
                         <TextBlock Text="ACTIVATION" Style="{StaticResource SectionLabel}"/>
-                        <TextBlock Text="Enter your license key to activate:"
+                        <TextBlock Text="Enter your email and license key to activate:"
                                    Foreground="#666680" FontSize="11" Margin="0,0,0,8"/>
+
+                        <TextBox x:Name="LicenseEmailBox"
+                                 Background="#161618"
+                                 Foreground="#DCDCDC"
+                                 CaretBrush="#DCDCDC"
+                                 BorderBrush="#4A4A50"
+                                 BorderThickness="1"
+                                 Padding="7,5"
+                                 FontSize="12"
+                                 Margin="0,0,0,6"
+                                 MaxLength="255"
+                                 xml:space="preserve">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Tag" Value="Email address used at checkout"/>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -668,8 +685,9 @@
                                      FontSize="12"
                                      FontFamily="Consolas"
                                      Margin="0,0,8,0"
-                                     MaxLength="64"/>
-                            <Button Grid.Column="1"
+                                     MaxLength="32"/>
+                            <Button x:Name="ActivateBtn"
+                                    Grid.Column="1"
                                     Content="Activate"
                                     Style="{StaticResource DarkBtn}"
                                     Click="ActivateLicense_Click"/>
