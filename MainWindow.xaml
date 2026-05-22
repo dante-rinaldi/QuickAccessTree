@@ -58,6 +58,15 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="TreeViewItem">
                         <StackPanel>
+                            <!-- Divider line — only visible when IsDivider=True -->
+                            <Border x:Name="DividerLine"
+                                    Height="1"
+                                    Background="{DynamicResource Theme.BorderSoft}"
+                                    Margin="10,4,10,4"
+                                    Opacity="0.65"
+                                    Visibility="Collapsed"
+                                    IsHitTestVisible="True"/>
+
                             <Border x:Name="Row"
                                     Background="Transparent"
                                     CornerRadius="4"
@@ -182,6 +191,11 @@
                                 </MultiDataTrigger.Conditions>
                                 <Setter TargetName="GroupColorBar" Property="Visibility" Value="Visible"/>
                             </MultiDataTrigger>
+                            <!-- Divider: show thin line, hide normal row -->
+                            <DataTrigger Binding="{Binding IsDivider}" Value="True">
+                                <Setter TargetName="Row"         Property="Visibility"   Value="Collapsed"/>
+                                <Setter TargetName="DividerLine" Property="Visibility"   Value="Visible"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -272,9 +286,9 @@
         <Border x:Name="OuterBorder"
                 Background="{DynamicResource Theme.SidebarBg}"
                 Opacity="{DynamicResource Theme.SidebarOpacity}"
-                CornerRadius="6,0,0,6"
+                CornerRadius="6"
                 BorderBrush="{DynamicResource Theme.BorderBrush}"
-                BorderThickness="1,1,0,1">
+                BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="38"/>
@@ -387,11 +401,14 @@
                         </TreeView.ItemTemplate>
                         <TreeView.ContextMenu>
                             <ContextMenu x:Name="TreeCtxMenu">
-                                <MenuItem Header="Change color…"  Click="CtxColor_Click"/>
-                                <MenuItem Header="Reset color"    Click="ColorReset_Click"/>
-                                <MenuItem Header="Rename…"        Click="CtxRename_Click"/>
-                                <Separator/>
+                                <MenuItem x:Name="CtxColorItem"  Header="Change color…"  Click="CtxColor_Click"/>
+                                <MenuItem x:Name="CtxResetColor" Header="Reset color"    Click="ColorReset_Click"/>
+                                <MenuItem x:Name="CtxRenameItem" Header="Rename…"        Click="CtxRename_Click"/>
+                                <Separator x:Name="CtxSep1"/>
                                 <MenuItem Header="Add folder…"    Click="CtxAdd_Click"/>
+                                <MenuItem x:Name="CtxAddDivider" Header="Add divider"   Click="CtxAddDivider_Click"/>
+                                <Separator x:Name="CtxSep2"/>
+                                <MenuItem x:Name="CtxRemoveDivider" Header="Remove divider" Click="CtxRemoveDivider_Click" Visibility="Collapsed"/>
                                 <MenuItem x:Name="CtxRemoveItem"
                                           Header="Remove"
                                           Click="CtxRemove_Click"/>

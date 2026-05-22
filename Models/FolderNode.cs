@@ -57,6 +57,9 @@ public class FolderNode : INotifyPropertyChanged
     // True for the single "loading…" placeholder child added before real children load
     public bool IsDummy { get; set; }
 
+    // True for visual divider rows (synthetic "§d§{guid}" path, no filesystem backing)
+    public bool IsDivider { get; set; }
+
     public ObservableCollection<FolderNode> Children { get; set; } = new();
 
     public static FolderNode MakeDummy() => new() { Name = "Loading…", IsDummy = true };

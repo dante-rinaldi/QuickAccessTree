@@ -39,7 +39,7 @@
     cursor: pointer;
   }
   .topbar select:focus { outline: 2px solid #569cd6; }
-  .topbar label { font-size: 11px; color: #778; white-space: nowrap; }
+  .topbar label { font-size: 11px; color: #9cdcfe; white-space: nowrap; }
   .topbar-sep { width: 1px; height: 22px; background: #2a2a50; flex-shrink: 0; margin: 0 2px; }
   .topbar .spacer { flex: 1; min-width: 4px; }
   .btn-export {
@@ -76,13 +76,15 @@
     white-space: nowrap;
   }
   .btn-image:hover { background: #303050; color: #ddd; }
-  .opacity-group { display: flex; align-items: center; gap: 6px; }
-  .opacity-group input[type=range] {
+  .slider-group { display: flex; align-items: center; gap: 6px; }
+  .slider-group input[type=range] {
     width: 80px;
     cursor: pointer;
     accent-color: #569cd6;
   }
-  .opacity-val { font-size: 11px; color: #9cdcfe; min-width: 32px; font-variant-numeric: tabular-nums; }
+  .slider-group input[type=range].glow-range { accent-color: #e8a0ff; }
+  .slider-val { font-size: 11px; color: #9cdcfe; min-width: 32px; font-variant-numeric: tabular-nums; }
+  .slider-val.glow-val { color: #e8a0ff; }
 
   /* ── Main layout ─────────────────────────────────────────────── */
   .main {
@@ -116,7 +118,7 @@
   .sidebar-mock {
     width: 216px;
     height: 420px;
-    border-radius: 6px 0 0 6px;
+    border-radius: 6px;
     border: 1px solid var(--border);
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
     font-size: 12px;
@@ -139,12 +141,14 @@
     flex-shrink: 0;
     position: relative;
     z-index: 2;
+    cursor: pointer;
   }
   .mock-title {
     flex: 1;
     color: var(--secondaryText);
     font-weight: 600;
     font-size: 12px;
+    cursor: pointer;
   }
   .mock-icon-btn {
     width: 24px;
@@ -169,6 +173,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    cursor: pointer;
   }
 
   /* Color overlay — sits between the bg image and the content */
@@ -208,9 +213,9 @@
   .tree-row:hover { background: var(--itemHover); }
   .tree-row.selected { background: var(--itemSelect); }
   .tree-row .indent { display: inline-block; width: 12px; flex-shrink: 0; }
-  .tree-row .arrow { font-size: 8px; color: var(--dimText); flex-shrink: 0; width: 10px; }
+  .tree-row .arrow { font-size: 8px; color: var(--dimText); flex-shrink: 0; width: 10px; cursor: pointer; }
   .tree-row .icon { flex-shrink: 0; font-size: 12px; }
-  .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 
   /* Group row */
   .tree-row.group {
@@ -221,6 +226,7 @@
     padding: 0 6px;
     background: transparent;
     color: var(--primaryText);
+    cursor: pointer;
   }
   .tree-row.group:hover { border-color: var(--borderSoft); background: var(--itemHover); }
   .group-pill {
@@ -237,7 +243,9 @@
     background: var(--borderSoft);
     margin: 5px 10px;
     opacity: 0.6;
+    cursor: pointer;
   }
+  .tree-divider:hover { opacity: 1; }
 
   /* Quick links bar */
   .mock-quicklinks {
@@ -265,7 +273,34 @@
   .quicklink-btn:hover { background: var(--quickLinkHover); }
   .quicklink-btn:active { background: var(--quickLinkPress); }
 
-  /* ── Hover demo ──────────────────────────────────────────────── */
+  /* Footer: +Group / +Folder buttons */
+  .mock-footer {
+    background: var(--headerBg);
+    border-top: 1px solid var(--borderSoft);
+    padding: 5px 6px;
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+  .mock-add-btn {
+    flex: 1;
+    height: 24px;
+    background: transparent;
+    border: 1px solid var(--borderSoft);
+    border-radius: 3px;
+    color: var(--secondaryText);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .mock-add-btn:hover { background: var(--itemHover); color: var(--primaryText); }
+
+  /* ── States demo ──────────────────────────────────────────────── */
   .demo-section {
     width: 216px;
   }
@@ -292,6 +327,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border: 1px solid transparent;
+    cursor: pointer;
   }
   .demo-chip.hover    { background: var(--itemHover);      color: var(--primaryText); }
   .demo-chip.select   { background: var(--itemSelect);     color: var(--primaryText); }
@@ -305,6 +341,7 @@
     border-radius: 4px;
     padding: 4px 0;
     margin-top: 6px;
+    cursor: pointer;
   }
   .popup-item {
     padding: 4px 12px;
@@ -342,6 +379,9 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 8px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    transition: background 0.15s;
   }
   .row label {
     font-size: 12px;
@@ -349,8 +389,24 @@
     width: 200px;
     flex-shrink: 0;
   }
+
+  /* Hex input is the primary entry — larger, monospace, prominent */
+  .hex-input {
+    width: 88px;
+    background: #1e1e30;
+    color: #e0e0ff;
+    border: 1.5px solid #555577;
+    border-radius: 4px;
+    padding: 4px 7px;
+    font-size: 12px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .hex-input:focus { outline: 2px solid #569cd6; border-color: #569cd6; }
+
   .row input[type=color] {
-    width: 36px;
+    width: 30px;
     height: 28px;
     border: 1px solid #444;
     border-radius: 4px;
@@ -359,17 +415,14 @@
     background: #252540;
     flex-shrink: 0;
   }
-  .hex-input {
-    width: 82px;
-    background: #1e1e30;
-    color: #dcdcdc;
-    border: 1px solid #444466;
-    border-radius: 4px;
-    padding: 4px 6px;
-    font-size: 12px;
-    font-family: 'Cascadia Code', 'Consolas', monospace;
+
+  /* Flash animation for click-to-highlight */
+  @keyframes ctrlFlash {
+    0%   { background: transparent; }
+    20%  { background: rgba(255, 200, 0, 0.28); }
+    100% { background: transparent; }
   }
-  .hex-input:focus { outline: 2px solid #569cd6; }
+  .row.flash { animation: ctrlFlash 0.7s ease-out; }
 
   /* ── Export modal ────────────────────────────────────────────── */
   .modal-overlay {
@@ -474,10 +527,18 @@
   <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="loadBgImage(this)">
   <button class="btn-image" id="clearBgBtn" onclick="clearBgImage()" style="display:none">✕ Clear</button>
 
-  <div class="opacity-group">
+  <div class="slider-group">
     <label>Opacity:</label>
     <input type="range" id="bgOpacityRange" min="0" max="100" value="100" oninput="setBgOpacity(this.value)">
-    <span class="opacity-val" id="bgOpacityVal">100%</span>
+    <span class="slider-val" id="bgOpacityVal">100%</span>
+  </div>
+
+  <div class="topbar-sep"></div>
+
+  <div class="slider-group">
+    <label style="color:#e8a0ff">Glow:</label>
+    <input type="range" class="glow-range" id="glowRange" min="0" max="100" value="0" oninput="setGlowIntensity(this.value)">
+    <span class="slider-val glow-val" id="glowVal">0%</span>
   </div>
 
   <div class="spacer"></div>
@@ -489,137 +550,141 @@
 
   <!-- Preview -->
   <div class="preview-col">
-    <div class="preview-label">Live Preview</div>
+    <div class="preview-label">Live Preview — click any part to highlight its controls →</div>
 
     <div class="sidebar-mock">
       <!-- Header -->
-      <div class="mock-header">
-        <span class="mock-title">Sidebar Buddy</span>
-        <div class="mock-icon-btn">⚙</div>
-        <div class="mock-icon-btn">🗑</div>
-        <div class="mock-icon-btn">⇄</div>
-        <div class="mock-icon-btn">◀</div>
+      <div class="mock-header" onclick="highlightCtrl('headerBg')" title="→ Header Background">
+        <span class="mock-title" onclick="event.stopPropagation(); highlightCtrl('secondaryText')" title="→ Secondary Text">Sidebar Buddy</span>
+        <div class="mock-icon-btn" onclick="event.stopPropagation(); highlightCtrl('dimText')" title="→ Dim Text">⚙</div>
+        <div class="mock-icon-btn" onclick="event.stopPropagation(); highlightCtrl('dimText')">🗑</div>
+        <div class="mock-icon-btn" onclick="event.stopPropagation(); highlightCtrl('dimText')">⇄</div>
+        <div class="mock-icon-btn" onclick="event.stopPropagation(); highlightCtrl('dimText')">◀</div>
       </div>
       <!-- Body -->
-      <div class="mock-body" id="mockBody">
+      <div class="mock-body" id="mockBody" onclick="highlightCtrl('sidebarBg')" title="→ Sidebar Background">
         <!-- bg image sits on the element itself; this overlay is the color layer -->
         <div class="mock-bg-overlay" id="bgOverlay"></div>
 
         <div class="mock-tree">
           <!-- Group: Work -->
-          <div class="tree-row group">
+          <div class="tree-row group" onclick="event.stopPropagation(); highlightCtrl('border')" title="→ Primary Border">
             <div class="group-pill"></div>
-            <span class="name">🗂 WORK</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')" title="→ Primary Text">🗂 WORK</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')" title="→ Hover Background">
             <div class="indent"></div>
-            <span class="arrow">▼</span>
+            <span class="arrow" onclick="event.stopPropagation(); highlightCtrl('dimText')" title="→ Dim Text">▼</span>
             <span class="icon">📁</span>
-            <span class="name">Projects</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')" title="→ Primary Text">Projects</span>
           </div>
-          <div class="tree-row selected">
+          <div class="tree-row selected" onclick="event.stopPropagation(); highlightCtrl('itemSelect')" title="→ Selected Background">
             <div class="indent"></div>
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">SidebarBuddy</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">SidebarBuddy</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">ClientPortal</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">ClientPortal</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Designs</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Designs</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Invoices 2026</span>
-          </div>
-          <div class="tree-row">
-            <div class="indent"></div>
-            <span class="arrow"> </span>
-            <span class="icon">📁</span>
-            <span class="name">Contracts</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Invoices 2026</span>
           </div>
 
-          <div class="tree-divider"></div>
+          <div class="tree-divider" onclick="event.stopPropagation(); highlightCtrl('borderSoft')" title="→ Soft Border (divider)"></div>
 
           <!-- Group: Personal -->
-          <div class="tree-row group" style="margin-top:2px">
+          <div class="tree-row group" onclick="event.stopPropagation(); highlightCtrl('border')" title="→ Primary Border">
             <div class="group-pill" style="background:#AA00FF"></div>
-            <span class="name">🎵 PERSONAL</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">🎵 PERSONAL</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
-            <span class="arrow">▶</span>
+            <span class="arrow" onclick="event.stopPropagation(); highlightCtrl('dimText')">▶</span>
             <span class="icon">📁</span>
-            <span class="name">Music</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Music</span>
           </div>
-          <div class="tree-row">
-            <div class="indent"></div>
-            <span class="arrow"> </span>
-            <span class="icon">📁</span>
-            <span class="name">Photos</span>
-          </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Downloads</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Photos</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Videos</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Downloads</span>
+          </div>
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
+            <div class="indent"></div>
+            <span class="arrow"> </span>
+            <span class="icon">📁</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Videos</span>
           </div>
 
-          <div class="tree-divider"></div>
+          <div class="tree-divider" onclick="event.stopPropagation(); highlightCtrl('borderSoft')" title="→ Soft Border (divider)"></div>
 
           <!-- Group: Archive -->
-          <div class="tree-row group" style="margin-top:2px">
+          <div class="tree-row group" onclick="event.stopPropagation(); highlightCtrl('border')" title="→ Primary Border">
             <div class="group-pill" style="background:#22aa55"></div>
-            <span class="name">📦 ARCHIVE</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">📦 ARCHIVE</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">2025 Projects</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">2025 Projects</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">2024 Projects</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">2024 Projects</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Old Invoices</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Old Invoices</span>
           </div>
-          <div class="tree-row">
+          <div class="tree-row" onclick="event.stopPropagation(); highlightCtrl('itemHover')">
             <div class="indent"></div>
             <span class="arrow"> </span>
             <span class="icon">📁</span>
-            <span class="name">Backups</span>
+            <span class="name" onclick="event.stopPropagation(); highlightCtrl('primaryText')">Backups</span>
           </div>
         </div>
 
         <!-- Quick links (bottom) -->
-        <div class="mock-quicklinks">
-          <div class="quicklink-btn">💻&nbsp; This PC</div>
-          <div class="quicklink-btn">⚙&nbsp; Control Panel</div>
+        <div class="mock-quicklinks" onclick="event.stopPropagation(); highlightCtrl('quickLinkHover')" title="→ Quick Link Hover">
+          <div class="quicklink-btn" onclick="event.stopPropagation(); highlightCtrl('quickLinkHover')">
+            <span style="color:var(--secondaryText)">💻&nbsp; This PC</span>
+          </div>
+          <div class="quicklink-btn" onclick="event.stopPropagation(); highlightCtrl('quickLinkPress')">
+            <span style="color:var(--secondaryText)">⚙&nbsp; Control Panel</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Footer: +Group / +Folder buttons -->
+      <div class="mock-footer" onclick="highlightCtrl('headerBg')" title="→ Header Background">
+        <div class="mock-add-btn" onclick="event.stopPropagation(); highlightCtrl('borderSoft')">＋ Group</div>
+        <div class="mock-add-btn" onclick="event.stopPropagation(); highlightCtrl('borderSoft')">＋ Folder</div>
       </div>
     </div>
 
@@ -627,12 +692,12 @@
     <div class="demo-section">
       <div class="demo-label">States</div>
       <div class="demo-grid">
-        <div class="demo-chip hover">Folder Hover</div>
-        <div class="demo-chip select">Folder Selected</div>
-        <div class="demo-chip ql-hover">QuickLink Hover</div>
-        <div class="demo-chip ql-press">QuickLink Press</div>
+        <div class="demo-chip hover"    onclick="highlightCtrl('itemHover')">Folder Hover</div>
+        <div class="demo-chip select"   onclick="highlightCtrl('itemSelect')">Folder Selected</div>
+        <div class="demo-chip ql-hover" onclick="highlightCtrl('quickLinkHover')">QuickLink Hover</div>
+        <div class="demo-chip ql-press" onclick="highlightCtrl('quickLinkPress')">QuickLink Press</div>
       </div>
-      <div class="demo-popup" style="margin-top:10px">
+      <div class="demo-popup" style="margin-top:10px" onclick="highlightCtrl('popupBg')">
         <div class="popup-item">Change color</div>
         <div class="popup-item">Rename</div>
         <div class="popup-sep"></div>
@@ -646,82 +711,82 @@
 
     <div class="section-header">Frame</div>
 
-    <div class="row">
+    <div class="row" data-key="sidebarBg">
       <label>Sidebar Background</label>
-      <input type="color" id="c_sidebarBg" oninput="sync('sidebarBg',this.value)">
       <input type="text" class="hex-input" id="h_sidebarBg" oninput="syncHex('sidebarBg',this.value)" placeholder="#1E1E1E">
+      <input type="color" id="c_sidebarBg" oninput="sync('sidebarBg',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="headerBg">
       <label>Header / Title Bar Background</label>
-      <input type="color" id="c_headerBg" oninput="sync('headerBg',this.value)">
       <input type="text" class="hex-input" id="h_headerBg" oninput="syncHex('headerBg',this.value)" placeholder="#252526">
+      <input type="color" id="c_headerBg" oninput="sync('headerBg',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="border">
       <label>Primary Border (accents, group outlines)</label>
-      <input type="color" id="c_border" oninput="sync('border',this.value)">
       <input type="text" class="hex-input" id="h_border" oninput="syncHex('border',this.value)" placeholder="#3C3C3C">
+      <input type="color" id="c_border" oninput="sync('border',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="borderSoft">
       <label>Soft Border (separators, dividers)</label>
-      <input type="color" id="c_borderSoft" oninput="sync('borderSoft',this.value)">
       <input type="text" class="hex-input" id="h_borderSoft" oninput="syncHex('borderSoft',this.value)" placeholder="#555555">
+      <input type="color" id="c_borderSoft" oninput="sync('borderSoft',this.value)">
     </div>
 
     <div class="section-header">Text</div>
 
-    <div class="row">
+    <div class="row" data-key="primaryText">
       <label>Primary Text (folder labels)</label>
-      <input type="color" id="c_primaryText" oninput="sync('primaryText',this.value)">
       <input type="text" class="hex-input" id="h_primaryText" oninput="syncHex('primaryText',this.value)" placeholder="#DCDCDC">
+      <input type="color" id="c_primaryText" oninput="sync('primaryText',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="secondaryText">
       <label>Secondary Text (title bar, quick links)</label>
-      <input type="color" id="c_secondaryText" oninput="sync('secondaryText',this.value)">
       <input type="text" class="hex-input" id="h_secondaryText" oninput="syncHex('secondaryText',this.value)" placeholder="#CCCCCC">
+      <input type="color" id="c_secondaryText" oninput="sync('secondaryText',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="dimText">
       <label>Dim Text (header icons, arrows)</label>
-      <input type="color" id="c_dimText" oninput="sync('dimText',this.value)">
       <input type="text" class="hex-input" id="h_dimText" oninput="syncHex('dimText',this.value)" placeholder="#707070">
+      <input type="color" id="c_dimText" oninput="sync('dimText',this.value)">
     </div>
 
     <div class="section-header">Folder Row Highlights</div>
 
-    <div class="row">
+    <div class="row" data-key="itemHover">
       <label>Hover Background</label>
-      <input type="color" id="c_itemHover" oninput="sync('itemHover',this.value)">
       <input type="text" class="hex-input" id="h_itemHover" oninput="syncHex('itemHover',this.value)" placeholder="#2D2D30">
+      <input type="color" id="c_itemHover" oninput="sync('itemHover',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="itemSelect">
       <label>Selected Background</label>
-      <input type="color" id="c_itemSelect" oninput="sync('itemSelect',this.value)">
       <input type="text" class="hex-input" id="h_itemSelect" oninput="syncHex('itemSelect',this.value)" placeholder="#37373D">
+      <input type="color" id="c_itemSelect" oninput="sync('itemSelect',this.value)">
     </div>
 
     <div class="section-header">Quick Links (This PC / Control Panel)</div>
 
-    <div class="row">
+    <div class="row" data-key="quickLinkHover">
       <label>Hover Background</label>
-      <input type="color" id="c_quickLinkHover" oninput="sync('quickLinkHover',this.value)">
       <input type="text" class="hex-input" id="h_quickLinkHover" oninput="syncHex('quickLinkHover',this.value)" placeholder="#1E3247">
+      <input type="color" id="c_quickLinkHover" oninput="sync('quickLinkHover',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="quickLinkPress">
       <label>Press Background</label>
-      <input type="color" id="c_quickLinkPress" oninput="sync('quickLinkPress',this.value)">
       <input type="text" class="hex-input" id="h_quickLinkPress" oninput="syncHex('quickLinkPress',this.value)" placeholder="#254060">
+      <input type="color" id="c_quickLinkPress" oninput="sync('quickLinkPress',this.value)">
     </div>
 
     <div class="section-header">Other</div>
 
-    <div class="row">
+    <div class="row" data-key="popupBg">
       <label>Popup / Context Menu Background</label>
-      <input type="color" id="c_popupBg" oninput="sync('popupBg',this.value)">
       <input type="text" class="hex-input" id="h_popupBg" oninput="syncHex('popupBg',this.value)" placeholder="#2D2D30">
+      <input type="color" id="c_popupBg" oninput="sync('popupBg',this.value)">
     </div>
-    <div class="row">
+    <div class="row" data-key="scrollThumb">
       <label>Scrollbar Thumb</label>
-      <input type="color" id="c_scrollThumb" oninput="sync('scrollThumb',this.value)">
       <input type="text" class="hex-input" id="h_scrollThumb" oninput="syncHex('scrollThumb',this.value)" placeholder="#555555">
+      <input type="color" id="c_scrollThumb" oninput="sync('scrollThumb',this.value)">
     </div>
 
   </div>
@@ -745,8 +810,11 @@
 </div>
 
 <script>
-// ── Skin presets ─────────────────────────────────────────────────
-// bgOpacity matches ThemeManager.GetSkinDefault() values (0–1 float → 0–100%)
+// ── Skin presets ──────────────────────────────────────────────────
+// Colors sourced directly from ThemeManager.cs (Apply / ApplySkin).
+// bgOpacity: 0-100, matching GetSkinDefault() BgOpacity * 100.
+// glowIntensity: 0-100, matching GetSkinDefault() GlowIntensity * 100.
+// texture: filename in ../textures/ (null = no preset texture).
 const PRESETS = {
   DarkTheme: {
     sidebarBg:'#1E1E1E', headerBg:'#252526', popupBg:'#2D2D30',
@@ -755,7 +823,7 @@ const PRESETS = {
     primaryText:'#DCDCDC', secondaryText:'#CCCCCC', dimText:'#707070',
     scrollThumb:'#555555',
     quickLinkHover:'#1E3247', quickLinkPress:'#254060',
-    bgOpacity: 100,
+    bgOpacity: 100, glowIntensity: 0, texture: null,
   },
   LightTheme: {
     sidebarBg:'#F5F5F5', headerBg:'#EBEBEB', popupBg:'#FFFFFF',
@@ -764,7 +832,7 @@ const PRESETS = {
     primaryText:'#1A1A1A', secondaryText:'#333333', dimText:'#777777',
     scrollThumb:'#AAAAAA',
     quickLinkHover:'#CCD8E8', quickLinkPress:'#B8C8D8',
-    bgOpacity: 100,
+    bgOpacity: 100, glowIntensity: 0, texture: null,
   },
   FrostedGlass: {
     sidebarBg:'#0A2050', headerBg:'#071838', popupBg:'#18202E',
@@ -773,70 +841,70 @@ const PRESETS = {
     primaryText:'#E8F0FF', secondaryText:'#CCD8F0', dimText:'#6888A8',
     scrollThumb:'#387099',
     quickLinkHover:'#1A4A88', quickLinkPress:'#2058A0',
-    bgOpacity: 20,
+    bgOpacity: 20, glowIntensity: 55, texture: 'frostedglass.png',
   },
   Mica: {
-    sidebarBg:'#F5F5F8', headerBg:'#EDEDF0', popupBg:'#FFFFFF',
-    border:'#C0C0C8', borderSoft:'#B0B0B8',
-    itemHover:'#E0E0E8', itemSelect:'#CCCCDA',
-    primaryText:'#FFFFFF', secondaryText:'#DDDDDD', dimText:'#999999',
-    scrollThumb:'#AAAAAA',
-    quickLinkHover:'#C0D0E4', quickLinkPress:'#A8BCD4',
-    bgOpacity: 90,
+    sidebarBg:'#211508', headerBg:'#000000', popupBg:'#211508',
+    border:'#8C5F2B', borderSoft:'#CD8532',
+    itemHover:'#9A6528', itemSelect:'#5A3F20',
+    primaryText:'#F7D4AB', secondaryText:'#ADC3E1', dimText:'#999999',
+    scrollThumb:'#50627C',
+    quickLinkHover:'#9A6528', quickLinkPress:'#EDA350',
+    bgOpacity: 90, glowIntensity: 10, texture: 'mica.png',
   },
   NeonCyber: {
     sidebarBg:'#0A0E14', headerBg:'#0D1117', popupBg:'#161B22',
-    border:'#0088AA', borderSoft:'#1A3040',
-    itemHover:'#0D1F2D', itemSelect:'#163240',
+    border:'#AD2E8B', borderSoft:'#1A3040',
+    itemHover:'#7A2463', itemSelect:'#671351',
     primaryText:'#00FFFF', secondaryText:'#80DFFF', dimText:'#305060',
     scrollThumb:'#004455',
-    quickLinkHover:'#092A3D', quickLinkPress:'#10384D',
-    bgOpacity: 40,
+    quickLinkHover:'#AD2E8B', quickLinkPress:'#E665C4',
+    bgOpacity: 40, glowIntensity: 10, texture: 'neoncyber.png',
   },
   Terminal: {
     sidebarBg:'#0C0C0C', headerBg:'#111111', popupBg:'#1A1A1A',
-    border:'#008800', borderSoft:'#1A2A1A',
-    itemHover:'#0A1F0A', itemSelect:'#143314',
-    primaryText:'#00FF41', secondaryText:'#00CC33', dimText:'#2A5C2A',
+    border:'#008800', borderSoft:'#4DFF4D',
+    itemHover:'#2E842E', itemSelect:'#1E481E',
+    primaryText:'#00FF41', secondaryText:'#00CC33', dimText:'#00FF00',
     scrollThumb:'#1A4A1A',
-    quickLinkHover:'#082808', quickLinkPress:'#0F380F',
-    bgOpacity: 60,
+    quickLinkHover:'#2E842E', quickLinkPress:'#0F380F',
+    bgOpacity: 60, glowIntensity: 80, texture: 'terminal.png',
   },
   Paper: {
-    sidebarBg:'#FAF7F2', headerBg:'#F0EBE3', popupBg:'#FFFDF9',
+    sidebarBg:'#FAF7F2', headerBg:'#F7E4C5', popupBg:'#FFFDF9',
     border:'#D4C5B0', borderSoft:'#BFB09A',
-    itemHover:'#EEE8DF', itemSelect:'#E0D9CE',
-    primaryText:'#2C2416', secondaryText:'#4A3D2D', dimText:'#8C7B66',
-    scrollThumb:'#B0A090',
-    quickLinkHover:'#D8C8B0', quickLinkPress:'#C8B8A0',
-    bgOpacity: 100,
+    itemHover:'#F0C17A', itemSelect:'#FFD79E',
+    primaryText:'#2C2416', secondaryText:'#3E3223', dimText:'#000000',
+    scrollThumb:'#B88F51',
+    quickLinkHover:'#F0C17A', quickLinkPress:'#C8B8A0',
+    bgOpacity: 100, glowIntensity: 10, texture: 'paper.png',
   },
   Synthwave: {
-    sidebarBg:'#0D0717', headerBg:'#130B20', popupBg:'#1A1028',
-    border:'#AA00FF', borderSoft:'#2A1040',
-    itemHover:'#1A0A30', itemSelect:'#251040',
-    primaryText:'#FF71CE', secondaryText:'#B967FF', dimText:'#4A2070',
+    sidebarBg:'#221439', headerBg:'#130B20', popupBg:'#1A1028',
+    border:'#AA00FF', borderSoft:'#F3D512',
+    itemHover:'#522494', itemSelect:'#482183',
+    primaryText:'#FE9FDD', secondaryText:'#FFFFFF', dimText:'#C88AFF',
     scrollThumb:'#3A1060',
-    quickLinkHover:'#220844', quickLinkPress:'#2E0A58',
-    bgOpacity: 25,
+    quickLinkHover:'#522494', quickLinkPress:'#2E0A58',
+    bgOpacity: 25, glowIntensity: 30, texture: 'synthwave.png',
   },
   BrushedMetal: {
-    sidebarBg:'#242628', headerBg:'#2E3033', popupBg:'#323437',
+    sidebarBg:'#222425', headerBg:'#050506', popupBg:'#242629',
     border:'#5A5F65', borderSoft:'#6A7075',
-    itemHover:'#2E3235', itemSelect:'#383D42',
+    itemHover:'#676E74', itemSelect:'#565C61',
     primaryText:'#D8DCE0', secondaryText:'#B8BFC5', dimText:'#6A7078',
-    scrollThumb:'#5A6068',
-    quickLinkHover:'#3A4048', quickLinkPress:'#454C58',
-    bgOpacity: 55,
+    scrollThumb:'#737982',
+    quickLinkHover:'#676E74', quickLinkPress:'#454C58',
+    bgOpacity: 55, glowIntensity: 10, texture: 'brushedmetal.png',
   },
   HighContrast: {
     sidebarBg:'#000000', headerBg:'#000000', popupBg:'#000000',
     border:'#FFFFFF', borderSoft:'#FFFFFF',
-    itemHover:'#1A1A1A', itemSelect:'#3399FF',
+    itemHover:'#5582AF', itemSelect:'#256EB6',
     primaryText:'#FFFFFF', secondaryText:'#FFFFFF', dimText:'#FFFF00',
     scrollThumb:'#FFFFFF',
-    quickLinkHover:'#1A1A1A', quickLinkPress:'#333333',
-    bgOpacity: 100,
+    quickLinkHover:'#5582AF', quickLinkPress:'#333333',
+    bgOpacity: 100, glowIntensity: 0, texture: null,
   },
 };
 
@@ -874,6 +942,7 @@ const C_SHARP_KEY = {
 };
 
 let current = {};
+let currentGlow = 0;
 
 // ── Apply CSS variables to preview ───────────────────────────────
 function applyCSS(vals) {
@@ -908,6 +977,7 @@ function loadPreset(name) {
   if (!p) return;
   current = { ...p };
   applyCSS(current);
+
   for (const key of Object.keys(CSS_VAR)) {
     const ci = document.getElementById('c_' + key);
     const hi = document.getElementById('h_' + key);
@@ -915,10 +985,27 @@ function loadPreset(name) {
     if (ci) ci.value = val;
     if (hi) hi.value = val.toUpperCase();
   }
-  // Apply the preset's default BG opacity
+
+  // BG opacity
   const opacity = p.bgOpacity ?? 100;
   document.getElementById('bgOpacityRange').value = opacity;
-  setBgOpacity(opacity, /*skipSliderUpdate*/ true);
+  setBgOpacity(opacity, true);
+
+  // Glow
+  const glow = p.glowIntensity ?? 0;
+  document.getElementById('glowRange').value = glow;
+  setGlowIntensity(glow, true);
+
+  // Texture — auto-load preset image
+  const mockBody = document.getElementById('mockBody');
+  if (p.texture) {
+    mockBody.style.backgroundImage = `url('../textures/${p.texture}')`;
+    document.getElementById('clearBgBtn').style.display = '';
+  } else {
+    mockBody.style.backgroundImage = '';
+    document.getElementById('bgFileInput').value = '';
+    document.getElementById('clearBgBtn').style.display = 'none';
+  }
 }
 
 // ── Background image loading ──────────────────────────────────────
@@ -949,6 +1036,32 @@ function setBgOpacity(val, skipSliderUpdate) {
   }
 }
 
+// ── Glow intensity ────────────────────────────────────────────────
+// Mirrors WPF: BlurRadius = 10 * intensity, Opacity = intensity
+// CSS: text-shadow 0 0 {blur}px rgba(255,255,255,{opacity})
+function setGlowIntensity(val, skipSliderUpdate) {
+  currentGlow = parseInt(val);
+  const intensity = currentGlow / 100;
+  const blur = (intensity * 10).toFixed(1);
+  document.documentElement.style.setProperty('--glowBlur', `${blur}px`);
+  document.documentElement.style.setProperty('--glowOpacity', intensity.toFixed(2));
+  document.getElementById('glowVal').textContent = currentGlow + '%';
+  if (!skipSliderUpdate) {
+    document.getElementById('glowRange').value = currentGlow;
+  }
+}
+
+// ── Click-to-highlight control row ───────────────────────────────
+function highlightCtrl(key) {
+  const row = document.querySelector(`.row[data-key="${key}"]`);
+  if (!row) return;
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  row.classList.remove('flash');
+  void row.offsetWidth; // force reflow to restart animation
+  row.classList.add('flash');
+  row.addEventListener('animationend', () => row.classList.remove('flash'), { once: true });
+}
+
 // ── Hex → R G B bytes string ──────────────────────────────────────
 function hexToRGB(hex) {
   const h = hex.replace('#','');
@@ -976,6 +1089,14 @@ function openExport() {
   }
   lines.push(`    break;`);
 
+  // Append glow note
+  if (currentGlow > 0) {
+    const intensity = (currentGlow / 100).toFixed(2);
+    lines.push('');
+    lines.push(`// Glow: GetSkinDefault → (bgOpacity, glow=true, glowIntensity=${intensity})`);
+    lines.push(`// Update GetSkinDefault() to return (BgOpacity: ${(parseInt(document.getElementById('bgOpacityRange').value)/100).toFixed(2)}, Glow: true, GlowIntensity: ${intensity})`);
+  }
+
   document.getElementById('exportCode').textContent = lines.join('\n');
   document.getElementById('exportModal').classList.add('open');
   document.getElementById('copyBtn').textContent = '📋 Copy to Clipboard';
@@ -999,6 +1120,12 @@ function copyCode() {
 document.getElementById('exportModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeExport();
 });
+
+// Apply glow text-shadow to folder labels
+// Using a style element so it can reference CSS variables
+const glowStyle = document.createElement('style');
+glowStyle.textContent = `.tree-row .name { text-shadow: 0 0 var(--glowBlur, 0px) rgba(255,255,255,var(--glowOpacity, 0)); }`;
+document.head.appendChild(glowStyle);
 
 // ── Init ──────────────────────────────────────────────────────────
 loadPreset('DarkTheme');

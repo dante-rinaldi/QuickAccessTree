@@ -82,6 +82,10 @@ public partial class MainWindow : Window
             available[synth] = g;
         }
 
+        // Dividers — synthetic paths ("§d§{guid}"), root-only visual separators
+        foreach (var synth in _settings.DividerPaths)
+            available[synth] = new FolderNode { Name = string.Empty, Path = synth, IsDivider = true };
+
         if (_settings.ImportQuickAccess)
         {
             foreach (var n in _qaSvc.GetPinnedFolders())
@@ -245,9 +249,9 @@ public partial class MainWindow : Window
         bool hasSelection = e.NewValue is FolderNode;
         RemoveBtn.IsEnabled = hasSelection;
 
-        // Don't navigate during tree reload, and skip group headers (no real path)
+        // Don't navigate during tree reload, and skip group headers / dividers (no real path)
         if (_suppressNavigation) return;
-        if (e.NewValue is FolderNode node && !node.IsGroup)
+        if (e.NewValue is FolderNode node && !node.IsGroup && !node.IsDivider)
             _attachSvc?.NavigateTo(node.Path);
     }
 
@@ -319,45 +323,21 @@ public partial class MainWindow : Window
 
     internal void ApplyDockCorners()
     {
-        bool right   = _settings.DockSide == DockSide.Right;
-        bool isGlass = _settings.Skin is AppSkin.FrostedGlass or AppSkin.Mica;
+        bool right = _settings.DockSide == DockSide.Right;
 
-        if (isGlass)
-        {
-            // Glass skins float freely — full outline on every side, all corners rounded.
-            OuterBorder.CornerRadius   = new CornerRadius(6);
-            HeaderBorder.CornerRadius  = new CornerRadius(6, 6, 0, 0);
-            FooterBorder.CornerRadius  = new CornerRadius(0, 0, 6, 6);
-            CollapsedTab.CornerRadius  = new CornerRadius(6);
-            OuterBorder.BorderThickness  = new Thickness(1);
-            CollapsedTab.BorderThickness = new Thickness(1);
-        }
-        else
-        {
-            OuterBorder.CornerRadius = right
-                ? new CornerRadius(6, 0, 0, 6)
-                : new CornerRadius(0, 6, 6, 0);
+        // All skins: full rounded outline on every side.
+        OuterBorder.CornerRadius  = new CornerRadius(6);
+        HeaderBorder.CornerRadius = new CornerRadius(6, 6, 0, 0);
+        FooterBorder.CornerRadius = new CornerRadius(0, 0, 6, 6);
+        OuterBorder.BorderThickness = new Thickness(1);
 
-            HeaderBorder.CornerRadius = right
-                ? new CornerRadius(6, 0, 0, 0)
-                : new CornerRadius(0, 6, 0, 0);
-
-            FooterBorder.CornerRadius = right
-                ? new CornerRadius(0, 0, 0, 6)
-                : new CornerRadius(0, 0, 6, 0);
-
-            CollapsedTab.CornerRadius = right
-                ? new CornerRadius(6, 0, 0, 6)
-                : new CornerRadius(0, 6, 6, 0);
-
-            OuterBorder.BorderThickness = right
-                ? new Thickness(1, 1, 0, 1)
-                : new Thickness(0, 1, 1, 1);
-
-            CollapsedTab.BorderThickness = right
-                ? new Thickness(1, 1, 0, 1)
-                : new Thickness(0, 1, 1, 1);
-        }
+        // Collapsed tab protrudes from one edge — keep dock-side rounding.
+        CollapsedTab.CornerRadius = right
+            ? new CornerRadius(6, 0, 0, 6)
+            : new CornerRadius(0, 6, 6, 0);
+        CollapsedTab.BorderThickness = right
+            ? new Thickness(1, 1, 0, 1)
+            : new Thickness(0, 1, 1, 1);
 
         // Collapse/expand arrows flip with dock side
         CollapseBtn.Content = _isCollapsed
@@ -873,7 +853,20 @@ public partial class MainWindow : Window
             ?.FindAncestorOrSelf<TreeViewItem>();
 
         _contextNode = item?.DataContext as FolderNode;
-        CtxRemoveItem.IsEnabled = _contextNode != null;
+        bool isDivider = _contextNode?.IsDivider == true;
+        bool hasNode   = _contextNode != null && !isDivider;
+
+        // Folder/group items
+        CtxColorItem.Visibility     = hasNode ? Visibility.Visible : Visibility.Collapsed;
+        CtxResetColor.Visibility    = hasNode ? Visibility.Visible : Visibility.Collapsed;
+        CtxRenameItem.Visibility    = hasNode ? Visibility.Visible : Visibility.Collapsed;
+        CtxSep1.Visibility          = hasNode ? Visibility.Visible : Visibility.Collapsed;
+        CtxRemoveItem.Visibility    = isDivider ? Visibility.Collapsed : Visibility.Visible;
+        CtxRemoveItem.IsEnabled     = hasNode;
+
+        // Divider items
+        CtxRemoveDivider.Visibility = isDivider ? Visibility.Visible : Visibility.Collapsed;
+        CtxSep2.Visibility          = isDivider ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void CtxRemove_Click(object sender, RoutedEventArgs e)
@@ -896,7 +889,13 @@ public partial class MainWindow : Window
     {
         foreach (var node in nodes)
         {
-            if (node.IsGroup)
+            if (node.IsDivider)
+            {
+                _settings.DividerPaths.Remove(node.Path);
+                _settings.Placements.RemoveAll(
+                    p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (node.IsGroup)
             {
                 _settings.GroupNames.Remove(node.Path);
                 foreach (var p in _settings.Placements)
@@ -917,10 +916,53 @@ public partial class MainWindow : Window
         LoadTree();
     }
 
+    private void CtxAddDivider_Click(object sender, RoutedEventArgs e)
+    {
+        string synth = "§d§" + Guid.NewGuid().ToString("N");
+        _settings.DividerPaths.Add(synth);
+
+        // Insert after the right-clicked node in Placements, or at end if none
+        if (_contextNode != null)
+        {
+            int idx = _settings.Placements.FindIndex(
+                p => p.Path.Equals(_contextNode.Path, StringComparison.OrdinalIgnoreCase));
+            if (idx >= 0)
+                _settings.Placements.Insert(idx + 1, new FolderPlacement { Path = synth });
+            else
+                _settings.Placements.Add(new FolderPlacement { Path = synth });
+        }
+        else
+        {
+            _settings.Placements.Add(new FolderPlacement { Path = synth });
+        }
+
+        _settingsSvc.Save(_settings);
+        LoadTree();
+    }
+
+    private void CtxRemoveDivider_Click(object sender, RoutedEventArgs e)
+    {
+        if (_contextNode is not { IsDivider: true } n) return;
+        _settings.DividerPaths.Remove(n.Path);
+        _settings.Placements.RemoveAll(
+            p => p.Path.Equals(n.Path, StringComparison.OrdinalIgnoreCase));
+        _settingsSvc.Save(_settings);
+        LoadTree();
+    }
+
     private void RemoveFolderNode(FolderNode node)
     {
         // SAFETY: this removes only the sidebar bookmark from our settings JSON.
         // No filesystem operations are performed — no files or folders are ever deleted.
+        if (node.IsDivider)
+        {
+            _settings.DividerPaths.Remove(node.Path);
+            _settings.Placements.RemoveAll(
+                p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            _settingsSvc.Save(_settings);
+            LoadTree();
+            return;
+        }
         if (node.IsGroup)
         {
             _settings.GroupNames.Remove(node.Path);

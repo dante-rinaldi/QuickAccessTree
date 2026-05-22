@@ -25,6 +25,7 @@ public class AppSettings
     public List<FolderPlacement> Placements  { get; set; } = new();
     public Dictionary<string, bool>   ExpandedPaths { get; set; } = new();
     public Dictionary<string, string> GroupNames    { get; set; } = new();
+    public List<string>              DividerPaths  { get; set; } = new();
 
     // General settings
     public ColorInheritanceMode ColorInheritance   { get; set; } = ColorInheritanceMode.PerFolder;
