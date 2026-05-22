@@ -96,4 +96,26 @@ internal static class NativeMethods
         public int Width  => Right - Left;
         public int Height => Bottom - Top;
     }
+
+    // Composition attribute structs for acrylic / frosted-glass effects
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct AccentPolicy
+    {
+        public int AccentState;
+        public int AccentFlags;
+        public int GradientColor; // 0xAABBGGRR
+        public int AnimationId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WindowCompositionAttributeData
+    {
+        public int  Attribute;
+        public nint Data;
+        public int  SizeOfData;
+    }
+
+    [DllImport("user32.dll")]
+    internal static extern int SetWindowCompositionAttribute(
+        nint hwnd, ref WindowCompositionAttributeData data);
 }

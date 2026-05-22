@@ -26,9 +26,15 @@ public class SettingsService
         try
         {
             if (File.Exists(SettingsPath))
-                return JsonSerializer.Deserialize<AppSettings>(
-                           File.ReadAllText(SettingsPath), Options)
-                       ?? new AppSettings();
+            {
+                var s = JsonSerializer.Deserialize<AppSettings>(
+                            File.ReadAllText(SettingsPath), Options)
+                        ?? new AppSettings();
+                // JSON deserialization produces a case-sensitive dict; re-wrap so path
+                // lookups are case-insensitive (Windows paths are case-insensitive).
+                s.FolderColors = new Dictionary<string, string>(s.FolderColors, StringComparer.OrdinalIgnoreCase);
+                return s;
+            }
         }
         catch { }
         return new AppSettings();

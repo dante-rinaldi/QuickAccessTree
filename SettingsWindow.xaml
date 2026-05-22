@@ -477,7 +477,21 @@
                         </ListBox>
 
                         <!-- ── CUSTOMIZATION ──────────────────────────── -->
-                        <TextBlock Text="CUSTOMIZATION" Style="{StaticResource SectionLabel}"/>
+                        <Grid Margin="0,18,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="CUSTOMIZATION"
+                                       Foreground="#9CDCFE" FontSize="10" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1"
+                                    Content="Default"
+                                    Style="{StaticResource DarkBtn}"
+                                    FontSize="10" Height="20" Padding="10,0"
+                                    VerticalAlignment="Center"
+                                    Click="ResetToSkinDefaults_Click"/>
+                        </Grid>
                         <TextBlock Text="Fine-tune the look of your sidebar."
                                    Foreground="#666680" FontSize="11" Margin="0,0,0,10"/>
 

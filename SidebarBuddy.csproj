@@ -12,4 +12,11 @@
 
     </PropertyGroup>
 
+    <ItemGroup>
+        <None Include="textures\*.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>Textures\%(Filename)%(Extension)</Link>
+        </None>
+    </ItemGroup>
+
 </Project>

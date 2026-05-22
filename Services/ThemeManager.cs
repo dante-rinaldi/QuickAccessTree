@@ -64,6 +64,24 @@ public static class ThemeManager
         if (!r.Contains("Theme.TextGlowEffect"))  r["Theme.TextGlowEffect"]   = null;
     }
 
+    // ── Skin defaults ─────────────────────────────────────────────────
+
+    // Returns (bgOpacity, textGlow, glowIntensity) for skins that have preset defaults.
+    // Returns null for solid/no-texture skins (SolidDark, SolidLight, HighContrast).
+    public static (double BgOpacity, bool Glow, double GlowIntensity)? GetSkinDefault(AppSkin skin)
+        => skin switch
+        {
+            AppSkin.FrostedGlass => (0.20, true, 0.55),
+            AppSkin.Mica         => (0.90, true, 0.10),
+            AppSkin.NeonCyber    => (0.40, true, 0.10),
+            AppSkin.Terminal     => (0.60, true, 0.80),
+            AppSkin.Paper        => (1.00, true, 0.10),
+            AppSkin.Synthwave    => (0.25, true, 0.30),
+            AppSkin.BrushedMetal => (0.55, true, 0.10),
+            AppSkin.Custom       => (0.25, true, 0.10),
+            _                    => null,
+        };
+
     // ── Customization ─────────────────────────────────────────────────
 
     private static readonly Dictionary<AppSkin, string> PresetTextures = new()
@@ -215,9 +233,9 @@ public static class ThemeManager
                 Brush (r, "Theme.BorderSoft",    0xB0, 0xB0, 0xB8);
                 BrushA(r, "Theme.ItemHover",     180, 0xE0, 0xE0, 0xE8);
                 BrushA(r, "Theme.ItemSelect",    200, 0xCC, 0xCC, 0xDA);
-                Brush (r, "Theme.PrimaryText",   0x1A, 0x1A, 0x1A);
-                Brush (r, "Theme.SecondaryText", 0x33, 0x33, 0x33);
-                Brush (r, "Theme.DimText",       0x77, 0x77, 0x77);
+                Brush (r, "Theme.PrimaryText",   0xFF, 0xFF, 0xFF);
+                Brush (r, "Theme.SecondaryText", 0xDD, 0xDD, 0xDD);
+                Brush (r, "Theme.DimText",       0x99, 0x99, 0x99);
                 Brush (r, "Theme.ScrollThumb",   0xAA, 0xAA, 0xAA);
                 // Tint: AABBGGRR = 0x90F8F5F5 (56% light neutral)
                 ApplyAcrylic(unchecked((int)0x90F8F5F5));

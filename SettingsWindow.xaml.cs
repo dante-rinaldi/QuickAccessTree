@@ -157,8 +157,45 @@ public partial class SettingsWindow : Window
     private void Skin_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_loading) return;
-        UpdateCustomUploadPanelState((AppSkin)SkinList.SelectedIndex);
+        var skin = (AppSkin)SkinList.SelectedIndex;
+        UpdateCustomUploadPanelState(skin);
+        ApplySkinDefaults(skin);
         LiveApply();
+    }
+
+    private void ApplySkinDefaults(AppSkin skin)
+    {
+        var d = ThemeManager.GetSkinDefault(skin);
+        if (d is null) return;
+
+        var (bgOpacity, glow, glowIntensity) = d.Value;
+
+        _loading = true;
+        try
+        {
+            CbShowBgImage.IsChecked     = true;
+            BgOpacitySlider.Value       = bgOpacity;
+            UpdateBgOpacityLabel(bgOpacity);
+            CbTextGlow.IsChecked        = glow;
+            GlowSlider.Value            = glowIntensity;
+            UpdateGlowLabel(glowIntensity);
+            GlowIntensityRow.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        _settings.ShowBackgroundImage    = true;
+        _settings.BackgroundImageOpacity = bgOpacity;
+        _settings.TextGlow               = glow;
+        _settings.TextGlowIntensity      = glowIntensity;
+    }
+
+    private void ResetToSkinDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        ApplySkinDefaults(_settings.Skin);
+        if (!_loading) LiveApply();
     }
 
     private void FontScaleSlider_ValueChanged(object sender,
