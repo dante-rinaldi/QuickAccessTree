@@ -1029,7 +1029,8 @@ function clearBgImage() {
 // ── Background opacity ────────────────────────────────────────────
 function setBgOpacity(val, skipSliderUpdate) {
   const pct = parseInt(val);
-  document.getElementById('bgOverlay').style.opacity = (pct / 100).toFixed(2);
+  // Slider = image opacity: 0 → image invisible (overlay opaque), 100 → image fully visible (overlay transparent)
+  document.getElementById('bgOverlay').style.opacity = ((100 - pct) / 100).toFixed(2);
   document.getElementById('bgOpacityVal').textContent = pct + '%';
   if (!skipSliderUpdate) {
     document.getElementById('bgOpacityRange').value = pct;

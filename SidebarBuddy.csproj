@@ -9,6 +9,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>SidebarBuddy</RootNamespace>
         <AssemblyName>SidebarBuddy</AssemblyName>
+        <ApplicationIcon>SidebarBuddy.ico</ApplicationIcon>
 
     </PropertyGroup>
 
