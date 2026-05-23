@@ -466,7 +466,7 @@
                                 Content="＋ Folder"
                                 Height="26"
                                 Background="{DynamicResource Theme.ItemHover}"
-                                Foreground="#9CDCFE"
+                                Foreground="{DynamicResource Theme.SecondaryText}"
                                 BorderBrush="{DynamicResource Theme.BorderSoft}"
                                 BorderThickness="1"
                                 FontSize="11"
