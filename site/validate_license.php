@@ -17,6 +17,7 @@
  */
 
 require_once __DIR__ . '/private/secrets.php';
+require_once __DIR__ . '/private/resend_mailer.php';
 
 header('Content-Type: application/json');
 
@@ -137,7 +138,7 @@ if ($device_id && preg_match('/^[0-9a-f]{32,64}$/', $device_id)) {
                  . "If this was you, no action needed.\n"
                  . "If it wasn't, email support@sidebarbuddy.com.\n\n"
                  . "— Sidebar Buddy";
-        @mail($email, $subject, $body, 'From: ' . FROM_EMAIL . "\r\nReply-To: " . FROM_EMAIL);
+        resendMailText($email, $subject, $body);
     }
 }
 

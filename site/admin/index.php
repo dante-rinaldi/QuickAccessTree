@@ -6,6 +6,7 @@
 
 session_start();
 require_once __DIR__ . '/../private/secrets.php';
+require_once __DIR__ . '/../private/resend_mailer.php';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -72,6 +73,26 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS downloads (
     clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+// Ensure notify_list table exists
+$pdo->exec("CREATE TABLE IF NOT EXISTS notify_list (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// CSV export
+if (isset($_GET['export']) && $_GET['export'] === 'notify') {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="sb_notify_list_' . date('Y-m-d') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['Email', 'Signed Up']);
+    foreach ($pdo->query('SELECT email, created_at FROM notify_list ORDER BY created_at DESC')->fetchAll() as $row) {
+        fputcsv($out, [$row['email'], $row['created_at']]);
+    }
+    fclose($out);
+    exit;
+}
+
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 $message = '';
@@ -102,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comp_email'])) {
                      . "Key: {$compKey}\n\n"
                      . "To activate: open Sidebar Buddy → Settings → License and enter your email and key.\n\n"
                      . "— Sidebar Buddy";
-            @mail($compEmail, $subject, $body, 'From: ' . FROM_EMAIL);
+            resendMailText($compEmail, $subject, $body);
 
             $message = "Comp key {$compKey} granted to {$compEmail} and emailed.";
         } catch (PDOException $ex) {
@@ -129,10 +150,13 @@ $compLicenses   = (int)$pdo->query("SELECT COUNT(*) FROM licenses WHERE type='co
 $totalTrials    = (int)$pdo->query('SELECT COUNT(*) FROM trial_devices')->fetchColumn();
 $totalDownloads = (int)$pdo->query('SELECT COUNT(*) FROM downloads')->fetchColumn();
 $revenue        = (float)$pdo->query('SELECT COALESCE(SUM(amount),0) FROM licenses')->fetchColumn();
+$totalNotify    = (int)$pdo->query('SELECT COUNT(*) FROM notify_list')->fetchColumn();
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 $tab = $_GET['tab'] ?? 'licenses';
+
+$notifyList = $pdo->query('SELECT email, created_at FROM notify_list ORDER BY created_at DESC')->fetchAll();
 
 $licenses = $pdo->query(
     'SELECT l.*, COUNT(a.id) as activations
@@ -240,6 +264,10 @@ $downloads = $pdo->query(
     <div class="stat-val"><?= $totalDownloads ?></div>
     <div class="stat-lbl">Download Clicks</div>
   </div>
+  <div class="stat" style="border-color:#3a2a5e;">
+    <div class="stat-val" style="color:#e879f9;"><?= $totalNotify ?></div>
+    <div class="stat-lbl">Launch Signups</div>
+  </div>
 </div>
 
 <!-- Tabs -->
@@ -247,6 +275,7 @@ $downloads = $pdo->query(
   <a class="tab <?= $tab === 'licenses'  ? 'active' : '' ?>" href="?tab=licenses">Licenses (<?= $totalLicenses ?>)</a>
   <a class="tab <?= $tab === 'trials'    ? 'active' : '' ?>" href="?tab=trials">Trial Installs (<?= $totalTrials ?>)</a>
   <a class="tab <?= $tab === 'downloads' ? 'active' : '' ?>" href="?tab=downloads">Downloads (<?= $totalDownloads ?>)</a>
+  <a class="tab <?= $tab === 'notify'    ? 'active' : '' ?>" href="?tab=notify">Launch Signups (<?= $totalNotify ?>)</a>
 </div>
 
 <div class="content">
@@ -365,6 +394,37 @@ $downloads = $pdo->query(
           <?php endforeach; ?>
           <?php if (!$downloads): ?>
             <tr><td colspan="4" class="muted" style="padding:20px;">No download clicks yet.</td></tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+
+  <?php elseif ($tab === 'notify'): ?>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <p style="color:#666680;font-size:13px;"><?= $totalNotify ?> email<?= $totalNotify !== 1 ? 's' : '' ?> waiting for launch.</p>
+      <?php if ($totalNotify > 0): ?>
+        <a href="?export=notify" class="btn" style="text-decoration:none;font-size:12px;padding:5px 14px;">Export CSV</a>
+      <?php endif; ?>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Signed Up</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($notifyList as $n): ?>
+          <tr>
+            <td><?= htmlspecialchars($n['email']) ?></td>
+            <td class="muted"><?= htmlspecialchars($n['created_at']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          <?php if (!$notifyList): ?>
+            <tr><td colspan="2" class="muted" style="padding:20px;">No signups yet.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>

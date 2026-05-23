@@ -7,6 +7,7 @@
  */
 
 require_once __DIR__ . '/private/secrets.php';
+require_once __DIR__ . '/private/resend_mailer.php';
 
 // Resolve IP
 $rawIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -61,7 +62,7 @@ $body    = "Someone downloaded Sidebar Buddy.\n\n"
          . "Location: " . ($loc ?: 'Unknown') . "\n"
          . "Time:     " . date('Y-m-d H:i:s T') . "\n"
          . "Agent:    {$ua}\n";
-@mail(NOTIFY_EMAIL, $subject, $body, 'From: ' . FROM_EMAIL);
+resendMailText(NOTIFY_EMAIL, $subject, $body);
 
 // Redirect to actual file
 header('Location: ' . DOWNLOAD_URL);

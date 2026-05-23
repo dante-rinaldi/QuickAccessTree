@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS licenses (
     payer_name   VARCHAR(255) NOT NULL DEFAULT '',
     license_key  VARCHAR(32)  NOT NULL UNIQUE,
     type         ENUM('paid','free') NOT NULL DEFAULT 'paid',
-    amount       DECIMAL(8,2) NOT NULL DEFAULT 9.99,
+    amount       DECIMAL(8,2) NOT NULL DEFAULT 10.00,
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email_key (email, license_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

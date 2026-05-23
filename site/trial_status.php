@@ -11,6 +11,7 @@
  */
 
 require_once __DIR__ . '/private/secrets.php';
+require_once __DIR__ . '/private/resend_mailer.php';
 
 header('Content-Type: application/json');
 
@@ -98,7 +99,7 @@ if ($is_new) {
              . "IP:        {$ip}\n"
              . "Location:  " . ($loc ? implode(', ', $loc) : 'Unknown') . "\n"
              . "Time:      " . date('Y-m-d H:i:s T') . "\n";
-    @mail(NOTIFY_EMAIL, $subject, $body, 'From: ' . FROM_EMAIL);
+    resendMailText(NOTIFY_EMAIL, $subject, $body);
 }
 
 $first_seen     = new DateTimeImmutable($data['first_seen']);

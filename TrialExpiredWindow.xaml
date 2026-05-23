@@ -102,7 +102,7 @@
                     </Grid.ColumnDefinitions>
                     <Button x:Name="BuyBtn"
                             Grid.Column="0"
-                            Content="Buy Now — $9.99"
+                            Content="Buy Now — $10"
                             Height="36"
                             Background="#1A3A5C"
                             Foreground="#7BBFFF"

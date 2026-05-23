@@ -8,6 +8,7 @@
  */
 
 require_once __DIR__ . '/private/secrets.php';
+require_once __DIR__ . '/private/resend_mailer.php';
 
 header('Content-Type: application/json');
 
@@ -178,12 +179,7 @@ function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
 </table>
 </body></html>';
 
-    $headers  = "From: Sidebar Buddy <" . FROM_EMAIL . ">\r\n";
-    $headers .= "Reply-To: support@sidebarbuddy.com\r\n";
-    $headers .= "MIME-Version: 1.0\r\n";
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-
-    mail($email, $subject, $html, $headers);
+    resendMail($email, $subject, $html);
 }
 
 function sendOwnerNotification(string $email, string $name, string $orderId, string $licenseKey): void {
@@ -195,8 +191,5 @@ function sendOwnerNotification(string $email, string $name, string $orderId, str
              . "Amount:   $" . number_format(APP_PRICE, 2) . " USD\n"
              . "Time:     " . date('Y-m-d H:i:s') . " UTC\n";
 
-    $headers  = "From: Sidebar Buddy <" . FROM_EMAIL . ">\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-
-    mail(NOTIFY_EMAIL, $subject, $body, $headers);
+    resendMailText(NOTIFY_EMAIL, $subject, $body);
 }
