@@ -231,41 +231,42 @@
   <section class="faq" id="faq">
     <div class="section-inner">
       <h2>Frequently asked questions.</h2>
+      <p class="section-sub">Got questions? We've got answers.</p>
       <div class="faq-list">
 
         <div class="faq-item">
-          <h3>Does Sidebar Buddy touch, move, or modify my files?</h3>
-          <p>No. Sidebar Buddy is a shortcut manager — it only stores the <em>path</em> to your folders, never the folders themselves. It reads folder names to display them in the sidebar and opens Windows Explorer to the correct location when you click one. Your files are never moved, renamed, copied, or deleted by Sidebar Buddy under any circumstances.</p>
+          <button class="faq-question">Does Sidebar Buddy touch, move, or modify my files?</button>
+          <div class="faq-answer"><p>No. Sidebar Buddy is a shortcut manager — it only stores the <em>path</em> to your folders, never the folders themselves. It reads folder names to display them in the sidebar and opens Windows Explorer to the correct location when you click one. Your files are never moved, renamed, copied, or deleted by Sidebar Buddy under any circumstances.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>Is it safe to try? Does it change any Windows settings?</h3>
-          <p>Yes, completely safe. There is no installer — the app runs as a single .exe. The only optional system change is "Launch on startup," which you control in Settings. Uninstalling is as simple as deleting the file.</p>
+          <button class="faq-question">Is it safe to try? Does it change any Windows settings?</button>
+          <div class="faq-answer"><p>Yes, completely safe. There is no installer — the app runs as a single .exe. The only optional system change is "Launch on startup," which you control in Settings. Uninstalling is as simple as deleting the file.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>What happens when the 15-day trial ends?</h3>
-          <p>The app will prompt you to activate your license before it launches. Your folder list and settings are preserved — nothing is deleted. Enter your license key to pick up right where you left off.</p>
+          <button class="faq-question">What happens when the 15-day trial ends?</button>
+          <div class="faq-answer"><p>The app will prompt you to activate your license before it launches. Your folder list and settings are preserved — nothing is deleted. Enter your license key to pick up right where you left off.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>Does it work with network drives, USB drives, or OneDrive?</h3>
-          <p>Yes. Any folder Windows can see — local drives, mapped network drives, USB, OneDrive, Dropbox — works as a bookmark. If the drive is offline when you click it, Windows Explorer handles the error the same way it always would.</p>
+          <button class="faq-question">Does it work with network drives, USB drives, or OneDrive?</button>
+          <div class="faq-answer"><p>Yes. Any folder Windows can see — local drives, mapped network drives, USB, OneDrive, Dropbox — works as a bookmark. If the drive is offline when you click it, Windows Explorer handles the error the same way it always would.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>Do I need admin rights to run it?</h3>
-          <p>No. Sidebar Buddy runs as a standard user application and requires no elevated permissions.</p>
+          <button class="faq-question">Do I need admin rights to run it?</button>
+          <div class="faq-answer"><p>No. Sidebar Buddy runs as a standard user application and requires no elevated permissions.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>Is there any telemetry, analytics, or cloud sync?</h3>
-          <p>None. Your folder list lives in a single JSON file on your machine. Nothing is ever transmitted to any server. The only internet connection the app makes is during license activation — and that's a one-time check.</p>
+          <button class="faq-question">Is there any telemetry, analytics, or cloud sync?</button>
+          <div class="faq-answer"><p>None. Your folder list lives in a single JSON file on your machine. Nothing is ever transmitted to any server. The only internet connection the app makes is during license activation — and that's a one-time check.</p></div>
         </div>
 
         <div class="faq-item">
-          <h3>Which versions of Windows are supported?</h3>
-          <p>Windows 10 (version 1903 or later) and Windows 11. Both 32-bit and 64-bit are supported. It requires .NET 8, which the installer bundles — no separate download needed.</p>
+          <button class="faq-question">Which versions of Windows are supported?</button>
+          <div class="faq-answer"><p>Windows 10 (version 1903 or later) and Windows 11. Both 32-bit and 64-bit are supported. It requires .NET 8, which the installer bundles — no separate download needed.</p></div>
         </div>
 
       </div>
@@ -397,6 +398,16 @@
         setTimeout(function() { btn.textContent = '📋 Copy License Key'; btn.style.background = '#0e639c'; }, 2000);
       });
     }
+  </script>
+  <script>
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
   </script>
   <script>
     window.addEventListener('scroll', () => {
