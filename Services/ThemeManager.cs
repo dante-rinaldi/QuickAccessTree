@@ -81,7 +81,7 @@ public static class ThemeManager
             AppSkin.Terminal     => (0.60, true, 0.80),
             AppSkin.Paper        => (1.00, true, 0.10),
             AppSkin.Synthwave    => (0.25, true, 0.30),
-            AppSkin.BrushedMetal => (0.55, true, 0.10),
+            AppSkin.BrushedMetal => (0.59, true, 0.10),
             AppSkin.Custom       => (0.25, true, 0.10),
             AppSkin.Clear        => (0.00, true, 1.00),
             _                    => null,
@@ -313,15 +313,15 @@ public static class ThemeManager
             case AppSkin.BrushedMetal:
                 ClearAcrylic();
                 Brush(r, "Theme.SidebarBg",      0x22, 0x24, 0x25);
-                Brush(r, "Theme.HeaderBg",       0x05, 0x05, 0x06);
+                Brush(r, "Theme.HeaderBg",       0x21, 0x21, 0x21);
                 Brush(r, "Theme.PopupBg",        0x24, 0x26, 0x29);
-                Brush(r, "Theme.BorderBrush",    0x5A, 0x5F, 0x65);
+                Brush(r, "Theme.BorderBrush",    0x6D, 0x83, 0x97);
                 Brush(r, "Theme.BorderSoft",     0x6A, 0x70, 0x75);
-                Brush(r, "Theme.ItemHover",      0x98, 0xA1, 0xA9);
-                Brush(r, "Theme.ItemSelect",     0x72, 0x78, 0x7E);
+                Brush(r, "Theme.ItemHover",      0x6D, 0x83, 0x97);
+                Brush(r, "Theme.ItemSelect",     0x51, 0x64, 0x76);
                 Brush(r, "Theme.PrimaryText",    0xFF, 0xFF, 0xFF);
-                Brush(r, "Theme.SecondaryText",  0xB8, 0xBF, 0xC5);
-                Brush(r, "Theme.DimText",        0xB5, 0xBE, 0xC9);
+                Brush(r, "Theme.SecondaryText",  0x87, 0x87, 0x87);
+                Brush(r, "Theme.DimText",        0xA5, 0xC1, 0xE3);
                 Brush(r, "Theme.ScrollThumb",    0x73, 0x79, 0x82);
                 Brush(r, "Theme.QuickLinkHover", 0x67, 0x6E, 0x74);
                 Brush(r, "Theme.QuickLinkPress", 0x30, 0x36, 0x40);
