@@ -472,6 +472,21 @@ h1 {
   cursor: default;
 }
 
+.skin-chip img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
+}
+
+.skin-chip:hover img {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
 .skin-chip span {
   font-size: 0.82rem;
   font-weight: 600;
@@ -482,13 +497,9 @@ h1 {
 .skin-preview {
   width: 100%;
   aspect-ratio: 3/4;
-  background: var(--skin-bg, #1e1e1e);
-  border: 1px solid var(--skin-border, #444);
   border-radius: 8px;
-  padding: 10px 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   transition: transform 0.2s, box-shadow 0.2s;
   overflow: hidden;
@@ -499,29 +510,9 @@ h1 {
   box-shadow: 0 8px 30px rgba(0,0,0,0.5);
 }
 
-.skin-preview .skin-bar {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--skin-accent, #ddd);
-  opacity: 0.5;
-  width: 60%;
-}
-
-.skin-preview .skin-row {
-  height: 5px;
-  border-radius: 3px;
-  background: var(--skin-accent, #ddd);
-  opacity: 0.35;
-}
-
-.skin-preview .skin-row.short { width: 70%; }
-
-.skin-preview.light .skin-bar,
-.skin-preview.light .skin-row { opacity: 0.4; }
-
 .custom-preview {
   background: linear-gradient(135deg, #3a1a5e 0%, #1a3a5e 50%, #1a5e3a 100%);
-  border-style: dashed;
+  border: 1px dashed #664488;
   align-items: center;
   justify-content: center;
 }
