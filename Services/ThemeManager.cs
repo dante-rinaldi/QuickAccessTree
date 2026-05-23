@@ -83,6 +83,7 @@ public static class ThemeManager
             AppSkin.Synthwave    => (0.25, true, 0.30),
             AppSkin.BrushedMetal => (0.55, true, 0.10),
             AppSkin.Custom       => (0.25, true, 0.10),
+            AppSkin.Clear        => (0.00, true, 1.00),
             _                    => null,
         };
 
@@ -349,20 +350,20 @@ public static class ThemeManager
                 break;
 
             case AppSkin.Clear:
-                ClearAcrylic(); // pure WPF transparency, no DWM effect
-                BrushA(r, "Theme.SidebarBg",      0x00, 0x00, 0x00, 0x00); // fully transparent
-                BrushA(r, "Theme.HeaderBg",        0x60, 0x08, 0x08, 0x08); // 38% dark header
-                Brush(r, "Theme.PopupBg",          0x1E, 0x1E, 0x1E);
-                BrushA(r, "Theme.BorderBrush",     0x99, 0xFF, 0xFF, 0xFF); // 60% white border
-                BrushA(r, "Theme.BorderSoft",      0x44, 0xFF, 0xFF, 0xFF);
-                BrushA(r, "Theme.ItemHover",       0x44, 0xFF, 0xFF, 0xFF);
-                BrushA(r, "Theme.ItemSelect",      0x66, 0xFF, 0xFF, 0xFF);
-                Brush(r, "Theme.PrimaryText",      0xFF, 0xFF, 0xFF);
-                Brush(r, "Theme.SecondaryText",    0xEE, 0xEE, 0xEE);
-                BrushA(r, "Theme.DimText",         0xAA, 0xFF, 0xFF, 0xFF);
-                BrushA(r, "Theme.ScrollThumb",     0x66, 0xFF, 0xFF, 0xFF);
-                BrushA(r, "Theme.QuickLinkHover",  0x44, 0xFF, 0xFF, 0xFF);
-                BrushA(r, "Theme.QuickLinkPress",  0x66, 0xFF, 0xFF, 0xFF);
+                ClearAcrylic();
+                Brush(r, "Theme.SidebarBg",      0x00, 0x00, 0x00);
+                Brush(r, "Theme.HeaderBg",       0x08, 0x08, 0x08);
+                Brush(r, "Theme.PopupBg",        0x05, 0x22, 0x2E);
+                Brush(r, "Theme.BorderBrush",    0x9E, 0xE2, 0xFF);
+                Brush(r, "Theme.BorderSoft",     0x9E, 0xE2, 0xFF);
+                Brush(r, "Theme.ItemHover",      0x6F, 0xB1, 0xCE);
+                Brush(r, "Theme.ItemSelect",     0x53, 0x80, 0x93);
+                Brush(r, "Theme.PrimaryText",    0xFF, 0xFF, 0xFF);
+                Brush(r, "Theme.SecondaryText",  0xEE, 0xEE, 0xEE);
+                Brush(r, "Theme.DimText",        0xAA, 0xAA, 0xAA);
+                Brush(r, "Theme.ScrollThumb",    0x31, 0x62, 0x77);
+                Brush(r, "Theme.QuickLinkHover", 0x6F, 0xB1, 0xCE);
+                Brush(r, "Theme.QuickLinkPress", 0x53, 0x80, 0x93);
                 break;
         }
     }
