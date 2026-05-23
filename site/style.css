@@ -461,14 +461,15 @@ h1 {
 .skins-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 16px 16px;
+  row-gap: 32px;
 }
 
 .skin-chip {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: default;
   min-width: 0;
 }
