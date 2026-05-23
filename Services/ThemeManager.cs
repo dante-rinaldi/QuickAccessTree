@@ -351,19 +351,19 @@ public static class ThemeManager
 
             case AppSkin.Clear:
                 ClearAcrylic();
-                Brush(r, "Theme.SidebarBg",      0x00, 0x00, 0x00);
-                Brush(r, "Theme.HeaderBg",       0x08, 0x08, 0x08);
-                Brush(r, "Theme.PopupBg",        0x05, 0x22, 0x2E);
+                BrushA(r, "Theme.SidebarBg",      0x00, 0x00, 0x00, 0x00);
+                BrushA(r, "Theme.HeaderBg",        0x00, 0x08, 0x08, 0x08);
+                BrushA(r, "Theme.PopupBg",         0x00, 0x05, 0x22, 0x2E);
                 Brush(r, "Theme.BorderBrush",    0x9E, 0xE2, 0xFF);
                 Brush(r, "Theme.BorderSoft",     0x9E, 0xE2, 0xFF);
-                Brush(r, "Theme.ItemHover",      0x6F, 0xB1, 0xCE);
-                Brush(r, "Theme.ItemSelect",     0x53, 0x80, 0x93);
+                Brush(r, "Theme.ItemHover",      0x4B, 0x7F, 0x95);
+                Brush(r, "Theme.ItemSelect",     0x1D, 0x51, 0x67);
                 Brush(r, "Theme.PrimaryText",    0xFF, 0xFF, 0xFF);
                 Brush(r, "Theme.SecondaryText",  0xEE, 0xEE, 0xEE);
                 Brush(r, "Theme.DimText",        0xAA, 0xAA, 0xAA);
                 Brush(r, "Theme.ScrollThumb",    0x31, 0x62, 0x77);
-                Brush(r, "Theme.QuickLinkHover", 0x6F, 0xB1, 0xCE);
-                Brush(r, "Theme.QuickLinkPress", 0x53, 0x80, 0x93);
+                Brush(r, "Theme.QuickLinkHover", 0x4B, 0x7F, 0x95);
+                Brush(r, "Theme.QuickLinkPress", 0x1D, 0x51, 0x67);
                 break;
         }
     }
