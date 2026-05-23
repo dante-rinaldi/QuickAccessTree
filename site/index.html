@@ -19,6 +19,7 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#skins">Skins</a>
+        <a href="#faq">FAQ</a>
         <a href="#pricing">Pricing</a>
         <a href="#pricing" class="btn-nav">Free Trial</a>
       </div>
@@ -102,8 +103,8 @@
 
         <div class="feature-card">
           <div class="feature-icon">&#128247;</div>
-          <h3>8 Visual Skins</h3>
-          <p>Frosted Glass, Mica, Neon Cyber, Terminal, Synthwave, Paper, Brushed Metal, High Contrast — each with a hand-tuned texture, transparency, and glow preset. Plus a Custom skin where you upload any image as a background.</p>
+          <h3>12 Visual Skins</h3>
+          <p>Frosted Glass, Mica, Neon Cyber, Terminal, Synthwave, Paper, Brushed Metal, High Contrast, Clear — each with hand-tuned textures, transparency, and glow presets. Plus Dark, Light, and a Custom skin where you upload any image.</p>
         </div>
 
         <div class="feature-card">
@@ -138,7 +139,7 @@
   <section class="skins" id="skins">
     <div class="section-inner">
       <h2>Pick a look. Make it yours.</h2>
-      <p class="section-sub">Nine skins ship out of the box. The Custom skin lets you go further — upload any image and dial in transparency, glow, and highlight color.</p>
+      <p class="section-sub">Twelve skins ship out of the box. The Custom skin lets you go further — upload any image and dial in transparency, glow, and highlight color.</p>
       <div class="skins-grid">
         <div class="skin-chip" style="--skin-bg:#1E1E1E;--skin-accent:#DCDCDC;--skin-border:#3C3C3C;">
           <div class="skin-preview">
@@ -221,6 +222,24 @@
           </div>
           <span>Brushed Metal</span>
         </div>
+        <div class="skin-chip" style="--skin-bg:#000000;--skin-accent:#FFFFFF;--skin-border:#FFFFFF;">
+          <div class="skin-preview">
+            <div class="skin-bar"></div>
+            <div class="skin-row"></div>
+            <div class="skin-row short"></div>
+            <div class="skin-row"></div>
+          </div>
+          <span>High Contrast</span>
+        </div>
+        <div class="skin-chip" style="--skin-bg:rgba(0,0,0,0.05);--skin-accent:#FFFFFF;--skin-border:#9EE2FF;">
+          <div class="skin-preview" style="background:linear-gradient(135deg,rgba(0,150,200,0.18),rgba(0,80,120,0.10));border:1px solid #9EE2FF;">
+            <div class="skin-bar" style="background:rgba(8,8,8,0.38);"></div>
+            <div class="skin-row" style="background:rgba(158,226,255,0.25);"></div>
+            <div class="skin-row short" style="background:rgba(158,226,255,0.18);"></div>
+            <div class="skin-row" style="background:rgba(158,226,255,0.25);"></div>
+          </div>
+          <span>Clear</span>
+        </div>
         <div class="skin-chip custom-chip">
           <div class="skin-preview custom-preview">
             <div class="custom-label">Your<br>Image</div>
@@ -263,6 +282,51 @@
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <div class="section-inner">
+      <h2>Frequently asked questions.</h2>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <h3>Does Sidebar Buddy touch, move, or modify my files?</h3>
+          <p>No. Sidebar Buddy is a shortcut manager — it only stores the <em>path</em> to your folders, never the folders themselves. It reads folder names to display them in the sidebar and opens Windows Explorer to the correct location when you click one. Your files are never moved, renamed, copied, or deleted by Sidebar Buddy under any circumstances.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Is it safe to try? Does it change any Windows settings?</h3>
+          <p>Yes, completely safe. There is no installer — the app runs as a single .exe. The only optional system change is "Launch on startup," which you control in Settings. Uninstalling is as simple as deleting the file.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What happens when the 15-day trial ends?</h3>
+          <p>The sidebar continues to work in read-only mode — you can still click folders and navigate. Adding, removing, reordering, and color-coding folders requires a license. No data is lost and no nags appear until you try to make a change.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Does it work with network drives, USB drives, or OneDrive?</h3>
+          <p>Yes. Any folder Windows can see — local drives, mapped network drives, USB, OneDrive, Dropbox — works as a bookmark. If the drive is offline when you click it, Windows Explorer handles the error the same way it always would.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Do I need admin rights to run it?</h3>
+          <p>No. Sidebar Buddy runs as a standard user application and requires no elevated permissions.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Is there any telemetry, analytics, or cloud sync?</h3>
+          <p>None. Your folder list lives in a single JSON file on your machine. Nothing is ever transmitted to any server. The only internet connection the app makes is during license activation — and that's a one-time check.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Which versions of Windows are supported?</h3>
+          <p>Windows 10 (version 1903 or later) and Windows 11. Both 32-bit and 64-bit are supported. It requires .NET 8, which the installer bundles — no separate download needed.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- PRICING -->
   <section class="pricing" id="pricing">
     <div class="section-inner">
@@ -275,7 +339,7 @@
           <div class="pricing-price">$0</div>
           <div class="pricing-period">15 days, no card</div>
           <ul class="pricing-features">
-            <li>&#10003; All 9 skins unlocked</li>
+            <li>&#10003; All 12 skins unlocked</li>
             <li>&#10003; All features, no limits</li>
             <li>&#10003; No account required</li>
             <li>&#10003; No credit card</li>
