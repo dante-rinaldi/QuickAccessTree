@@ -45,6 +45,13 @@ public class FolderNode : INotifyPropertyChanged
         set { _isMultiSelected = value; OnPropertyChanged(); }
     }
 
+    private bool _isHighlighted;
+    public bool IsHighlighted
+    {
+        get => _isHighlighted;
+        set { _isHighlighted = value; OnPropertyChanged(); }
+    }
+
     // True once real children have been loaded (replaces the dummy placeholder)
     public bool ChildrenLoaded { get; set; }
 

@@ -26,7 +26,7 @@
       color: var(--text);
     }
     .contact-page .subtitle {
-      color: var(--muted);
+      color: #d4d4e8;
       margin-bottom: 48px;
       font-size: 0.95rem;
     }
@@ -39,7 +39,7 @@
     .contact-card label {
       display: block;
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #d4d4e8;
       margin-bottom: 6px;
     }
     .contact-card input[type="text"],
@@ -102,7 +102,7 @@
     .btn-contact:disabled { opacity: 0.5; cursor: not-allowed; }
     .form-note {
       font-size: 0.8rem;
-      color: var(--muted);
+      color: #d4d4e8;
     }
     .form-feedback {
       margin-top: 16px;
@@ -118,7 +118,7 @@
       align-items: center;
       gap: 6px;
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #d4d4e8;
       margin-bottom: 36px;
     }
     .back-link:hover { color: var(--text); }

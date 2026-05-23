@@ -79,6 +79,7 @@ public partial class App : System.Windows.Application
         _attachService = new ExplorerAttachService(
             _mainWindow, Settings.SidebarWidthDip, Settings.DockSide);
         _mainWindow.Initialize(Settings, _attachService, _settingsService);
+        _mainWindow.UpdateTrialBanner();
         _attachService.Start();
 
         SetupTrayIcon();
@@ -123,6 +124,7 @@ public partial class App : System.Windows.Application
                     _mainWindow?.ReloadTree();
                     _mainWindow?.ApplyQuickLinks();
                     _mainWindow?.ApplyDockCorners();
+                    _mainWindow?.UpdateTrialBanner();
                     if (_attachService != null)
                         _attachService.AutoHide = Settings.AutoHide;
                 });

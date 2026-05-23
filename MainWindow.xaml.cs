@@ -319,6 +319,26 @@ public partial class MainWindow : Window
         ApplyDockCorners();
     }
 
+    // ── Trial banner ──────────────────────────────────────────────────────
+
+    public void UpdateTrialBanner()
+    {
+        if (_settings.IsRegistered)
+        {
+            TrialBanner.Visibility = Visibility.Collapsed;
+            return;
+        }
+        int daysUsed = (int)(DateTime.UtcNow - _settings.TrialStartDate).TotalDays;
+        int daysLeft = Math.Max(0, 15 - daysUsed);
+        TrialBannerText.Text = daysLeft > 0
+            ? $"TRIAL — {daysLeft} day{(daysLeft == 1 ? "" : "s")} remaining"
+            : "TRIAL EXPIRED — click to register";
+        TrialBanner.Visibility = Visibility.Visible;
+    }
+
+    private void TrialBanner_Click(object sender, MouseButtonEventArgs e)
+        => ((App)Application.Current).OpenSettings();
+
     // ── Dock corner styling ───────────────────────────────────────────────
 
     internal void ApplyDockCorners()
@@ -438,6 +458,14 @@ public partial class MainWindow : Window
 
         if (!Directory.Exists(path)) return;
 
+        // Already visible in the tree — flash it instead of silently doing nothing
+        if (_nodesByPath.TryGetValue(path, out var existing))
+        {
+            _ = FlashExistingFolderAsync(existing);
+            return;
+        }
+
+        // In settings but off-disk (e.g. disconnected drive) — skip silently
         if (_settings.CustomFolders.Any(
                 f => f.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
             return;
@@ -460,6 +488,46 @@ public partial class MainWindow : Window
         };
         return dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK
             ? dlg.SelectedPath : null;
+    }
+
+    // ── Duplicate-add flash ───────────────────────────────────────────────
+
+    private async Task FlashExistingFolderAsync(FolderNode node)
+    {
+        EnsureParentsExpanded(node.Path);
+        // Yield until WPF has rendered the newly-expanded parents
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+        FindTreeViewItem(FolderTree, node)?.BringIntoView();
+        for (int i = 0; i < 3; i++)
+        {
+            node.IsHighlighted = true;
+            await Task.Delay(220);
+            node.IsHighlighted = false;
+            if (i < 2) await Task.Delay(160);
+        }
+    }
+
+    private void EnsureParentsExpanded(string childPath)
+    {
+        var p = _settings.Placements.FirstOrDefault(
+            x => x.Path.Equals(childPath, StringComparison.OrdinalIgnoreCase));
+        if (p?.ParentPath == null) return;
+        EnsureParentsExpanded(p.ParentPath);
+        if (_nodesByPath.TryGetValue(p.ParentPath, out var parent))
+            parent.IsExpanded = true;
+    }
+
+    private static TreeViewItem? FindTreeViewItem(ItemsControl container, FolderNode target)
+    {
+        foreach (var item in container.Items)
+        {
+            if (container.ItemContainerGenerator.ContainerFromItem(item) is not TreeViewItem tvi)
+                continue;
+            if (item == target) return tvi;
+            var found = FindTreeViewItem(tvi, target);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     // ── Click-to-focus Explorer ───────────────────────────────────────────
@@ -965,16 +1033,48 @@ public partial class MainWindow : Window
         }
         if (node.IsGroup)
         {
+            var answer = System.Windows.MessageBox.Show(
+                "Delete the group header only (keep all folders, moved to root),\n" +
+                "or delete the group and everything inside it?\n\n" +
+                "Yes — Delete group and all contents\n" +
+                "No  — Delete group header only",
+                "Delete Group",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question);
+
+            if (answer == MessageBoxResult.Cancel) return;
+
             _settings.GroupNames.Remove(node.Path);
-            // Move the group's direct children back to root
-            foreach (var p in _settings.Placements)
+
+            if (answer == MessageBoxResult.Yes)
             {
-                if (p.ParentPath != null &&
-                    p.ParentPath.Equals(node.Path, StringComparison.OrdinalIgnoreCase))
-                    p.ParentPath = null;
+                var descendants = GetAllDescendantPaths(node.Path);
+                var descendantSet = new HashSet<string>(descendants, StringComparer.OrdinalIgnoreCase);
+                foreach (var descPath in descendants)
+                {
+                    _settings.GroupNames.Remove(descPath);
+                    _settings.DividerPaths.Remove(descPath);
+                    _settings.CustomFolders.RemoveAll(
+                        cf => cf.Path.Equals(descPath, StringComparison.OrdinalIgnoreCase));
+                    bool isSynthetic = descPath.StartsWith("§", StringComparison.Ordinal);
+                    if (!isSynthetic &&
+                        !_settings.RemovedPaths.Contains(descPath, StringComparer.OrdinalIgnoreCase))
+                        _settings.RemovedPaths.Add(descPath);
+                }
+                _settings.Placements.RemoveAll(p =>
+                    p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase) ||
+                    descendantSet.Contains(p.Path));
             }
-            _settings.Placements.RemoveAll(
-                p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            else // No = group header only, keep contents at root
+            {
+                foreach (var p in _settings.Placements)
+                {
+                    if (p.ParentPath?.Equals(node.Path, StringComparison.OrdinalIgnoreCase) == true)
+                        p.ParentPath = null;
+                }
+                _settings.Placements.RemoveAll(
+                    p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            }
         }
         else
         {
@@ -986,6 +1086,20 @@ public partial class MainWindow : Window
 
         _settingsSvc.Save(_settings);
         LoadTree();
+    }
+
+    private List<string> GetAllDescendantPaths(string parentPath)
+    {
+        var result = new List<string>();
+        foreach (var p in _settings.Placements)
+        {
+            if (p.ParentPath?.Equals(parentPath, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                result.Add(p.Path);
+                result.AddRange(GetAllDescendantPaths(p.Path));
+            }
+        }
+        return result;
     }
 
     // ── Color picker ──────────────────────────────────────────────────────
@@ -1048,7 +1162,9 @@ public partial class MainWindow : Window
         foreach (var target in targets)
         {
             target.Color = null;
-            _settings.FolderColors.Remove(target.Path);
+            // Store explicit yellow rather than removing — prevents cascade mode from
+            // re-applying an ancestor's color over the reset folder.
+            _settings.FolderColors[target.Path] = "#FFC000";
             foreach (var desc in GetVisualDescendants(target))
                 _settings.FolderColors.Remove(desc.Path);
         }

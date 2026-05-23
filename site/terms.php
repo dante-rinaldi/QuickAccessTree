@@ -26,7 +26,7 @@ $pageTitle = 'Terms of Service - Sidebar Buddy';
     }
     .policy-page .meta {
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #d4d4e8;
       margin-bottom: 48px;
     }
     .policy-page h2 {
@@ -53,7 +53,7 @@ $pageTitle = 'Terms of Service - Sidebar Buddy';
       align-items: center;
       gap: 6px;
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #d4d4e8;
       margin-bottom: 36px;
     }
     .back-link:hover { color: var(--text); }

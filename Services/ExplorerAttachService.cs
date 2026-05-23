@@ -166,6 +166,7 @@ public class ExplorerAttachService : IDisposable
 
     private void Track(nint hwnd)
     {
+        if (IsRecycleBin(hwnd)) return;
         _explorerHwnd = hwnd;
         SnapSidebar(hwnd);
         ShowSidebar(immediate: false);
@@ -185,7 +186,7 @@ public class ExplorerAttachService : IDisposable
         nint found = nint.Zero;
         EnumWindows((h, _) =>
         {
-            if (IsExplorerWindow(h) && NativeMethods.IsWindowVisible(h))
+            if (IsExplorerWindow(h) && NativeMethods.IsWindowVisible(h) && !IsRecycleBin(h))
             { found = h; return false; }
             return true;
         }, nint.Zero);
@@ -397,6 +398,33 @@ public class ExplorerAttachService : IDisposable
         var sb = new StringBuilder(256);
         NativeMethods.GetClassName(hwnd, sb, sb.Capacity);
         return sb.ToString() is "CabinetWClass" or "ExploreWClass";
+    }
+
+    // Returns true if the window is the Recycle Bin shell folder.
+    // Checked via the Shell COM path (CLSID) so it works on any locale.
+    private static bool IsRecycleBin(nint hwnd)
+    {
+        try
+        {
+            Type? t = Type.GetTypeFromCLSID(ShellWindowsCLSID);
+            if (t == null) return false;
+            dynamic sw = Activator.CreateInstance(t)!;
+            for (int i = 0; i < (int)sw.Count; i++)
+            {
+                dynamic? w = sw.Item(i);
+                if (w == null) continue;
+                try
+                {
+                    if ((nint)(int)w.HWND != hwnd) continue;
+                    string path = (string)w.Document.Folder.Self.Path;
+                    return path.Contains("645FF040-5081-101B-9F08-00AA002F954E",
+                        StringComparison.OrdinalIgnoreCase);
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return false;
     }
 
 

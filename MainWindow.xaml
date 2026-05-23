@@ -149,9 +149,17 @@
                                 </Grid>
                             </Border>
 
-                            <ItemsPresenter x:Name="Items"
-                                            Margin="10,0,0,0"
-                                            Visibility="Collapsed"/>
+                            <Grid x:Name="Items"
+                                  Visibility="Collapsed"
+                                  Margin="32,0,0,0">
+                                <Rectangle Width="1"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,3,0,3"
+                                           Fill="{DynamicResource Theme.BorderSoft}"
+                                           Opacity="0.55"
+                                           IsHitTestVisible="False"/>
+                                <ItemsPresenter/>
+                            </Grid>
                         </StackPanel>
 
                         <ControlTemplate.Triggers>
@@ -191,6 +199,10 @@
                                 </MultiDataTrigger.Conditions>
                                 <Setter TargetName="GroupColorBar" Property="Visibility" Value="Visible"/>
                             </MultiDataTrigger>
+                            <!-- Flash highlight when duplicate-add is attempted -->
+                            <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#55FFB300"/>
+                            </DataTrigger>
                             <!-- Divider: show thin line, hide normal row -->
                             <DataTrigger Binding="{Binding IsDivider}" Value="True">
                                 <Setter TargetName="Row"         Property="Visibility"   Value="Collapsed"/>
@@ -293,7 +305,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="38"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="38"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Background texture image spanning all rows -->
@@ -321,31 +333,36 @@
                                 Style="{StaticResource IconBtn}"
                                 DockPanel.Dock="Right"
                                 ToolTip="Collapse sidebar"
-                                Click="CollapseBtn_Click"
-                                Content="◀"/>
+                                Click="CollapseBtn_Click">
+                            <TextBlock Text="&#xE973;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                        </Button>
                         <!-- Dock side toggle -->
                         <Button x:Name="DockToggleBtn"
                                 Style="{StaticResource IconBtn}"
                                 DockPanel.Dock="Right"
                                 ToolTip="Swap dock side"
-                                Click="DockToggleBtn_Click"
-                                Content="⇄"/>
+                                Click="DockToggleBtn_Click">
+                            <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
+                        </Button>
                         <!-- Remove selected folder -->
                         <Button x:Name="RemoveBtn"
                                 Style="{StaticResource IconBtn}"
                                 DockPanel.Dock="Right"
                                 ToolTip="Remove selected folder"
                                 Click="RemoveBtn_Click"
-                                Content="🗑"
-                                FontSize="11"
-                                IsEnabled="False"/>
+                                IsEnabled="False">
+                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
+                        </Button>
                         <!-- Settings -->
                         <Button x:Name="SettingsBtn"
                                 Style="{StaticResource IconBtn}"
                                 DockPanel.Dock="Right"
                                 ToolTip="Settings"
-                                Click="SettingsBtn_Click"
-                                Content="⚙"/>
+                                Click="SettingsBtn_Click">
+                            <TextBlock Text="&#xE713;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14"/>
+                        </Button>
                         <TextBlock Text="Sidebar Buddy"
                                    FontWeight="SemiBold"
                                    FontSize="12"
@@ -425,6 +442,22 @@
                         CornerRadius="0,0,0,6"
                         BorderBrush="{DynamicResource Theme.BorderBrush}"
                         BorderThickness="0,1,0,0">
+                    <StackPanel>
+                        <!-- Trial banner — hidden when registered -->
+                        <Border x:Name="TrialBanner"
+                                Visibility="Collapsed"
+                                Padding="6,4"
+                                Background="{DynamicResource Theme.HeaderBg}"
+                                BorderBrush="{DynamicResource Theme.BorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="TrialBanner_Click">
+                            <TextBlock x:Name="TrialBannerText"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="#4a9eff"
+                                       TextAlignment="Center"/>
+                        </Border>
                     <Grid Margin="8,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -490,6 +523,7 @@
                             </Button.Template>
                         </Button>
                     </Grid>
+                    </StackPanel>
                 </Border>
             </Grid>
         </Border>
@@ -525,8 +559,6 @@
                 </Style>
             </Border.Style>
             <Button x:Name="ExpandBtn"
-                    Content="▶"
-                    FontSize="11"
                     Foreground="#9CDCFE"
                     Background="Transparent"
                     BorderThickness="0"
@@ -534,7 +566,9 @@
                     Click="CollapseBtn_Click"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    IsHitTestVisible="False"/>
+                    IsHitTestVisible="False">
+                <TextBlock Text="&#xE974;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+            </Button>
         </Border>
 
         <!-- Color picker popup -->
