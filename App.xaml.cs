@@ -40,6 +40,19 @@ public partial class App : System.Windows.Application
 
         base.OnStartup(e);
         Settings = _settingsService.Load();
+
+        // Block expired trial before showing anything
+        if (!Settings.IsRegistered && (DateTime.UtcNow - Settings.TrialStartDate).Days >= 15)
+        {
+            var expired = new TrialExpiredWindow(Settings, _settingsService);
+            expired.ShowDialog();
+            if (!Settings.IsRegistered)
+            {
+                Shutdown();
+                return;
+            }
+        }
+
         ThemeManager.Apply(Settings.Theme);
         ThemeManager.ApplyFontScale(Settings.FontScale);
 
