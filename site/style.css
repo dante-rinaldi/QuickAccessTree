@@ -647,7 +647,7 @@ footer {
 
 .faq-answer p {
   font-size: 0.93rem;
-  color: var(--muted);
+  color: var(--accent);
   line-height: 1.7;
   margin: 0;
 }
