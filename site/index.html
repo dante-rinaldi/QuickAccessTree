@@ -22,8 +22,7 @@
   <nav>
     <div class="nav-inner">
       <div class="logo">
-        <span class="logo-icon">&#128193;</span>
-        <span class="logo-text">Sidebar<strong>Buddy</strong></span>
+        <img src="logo/logo_sideBarBuddyIcon_Horiz.webp" alt="Sidebar Buddy" style="height:32px;width:auto;display:block;">
       </div>
       <div class="nav-links">
         <a href="#features">Features</a>
@@ -419,7 +418,8 @@
         style: { color: 'blue', shape: 'rect', label: 'pay', height: 45 },
         createOrder: function(data, actions) {
           return actions.order.create({
-            purchase_units: [{ description: 'Sidebar Buddy License', amount: { value: '10.00', currency_code: 'USD' } }]
+            purchase_units: [{ description: 'Sidebar Buddy License', amount: { value: '10.00', currency_code: 'USD' } }],
+            application_context: { return_url: 'https://sidebarbuddy.com/', cancel_url: 'https://sidebarbuddy.com/#pricing' }
           });
         },
         onApprove: function(data, actions) {

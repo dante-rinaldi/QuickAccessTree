@@ -18,6 +18,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Link>Textures\%(Filename)%(Extension)</Link>
         </None>
+        <Resource Include="site\logo\logo_sideBarBuddy_800px.png">
+            <LogicalName>logo.png</LogicalName>
+        </Resource>
     </ItemGroup>
 
 </Project>

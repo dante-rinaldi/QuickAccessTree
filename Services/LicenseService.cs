@@ -105,6 +105,15 @@ public static class LicenseService
     public static async Task<(bool Valid, string? Error)> ValidateLicenseAsync(
         string email, string key)
     {
+        // Local format check before hitting the server
+        if (!email.Contains('@') || !email.Contains('.'))
+            return (false, "Please enter a valid email address.");
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(key,
+                @"^SB-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$"))
+            return (false, "License key format should be SB-XXXX-XXXX-XXXX-XXXX.");
+
+        HttpResponseMessage resp;
         try
         {
             var payload = JsonSerializer.Serialize(new
@@ -115,10 +124,17 @@ public static class LicenseService
                 mac_address = GetMacAddress(),
                 hostname    = Environment.MachineName
             });
-            var resp = await Http.PostAsync(
+            resp = await Http.PostAsync(
                 ServerBase + "/validate_license.php",
                 new StringContent(payload, Encoding.UTF8, "application/json"));
+        }
+        catch
+        {
+            return (false, "Could not reach the activation server. Check your internet connection.");
+        }
 
+        try
+        {
             var body = JsonSerializer.Deserialize<JsonElement>(
                 await resp.Content.ReadAsStringAsync());
 
@@ -126,11 +142,11 @@ public static class LicenseService
             string? error = null;
             if (!valid && body.TryGetProperty("error", out var e))
                 error = e.GetString();
-            return (valid, error ?? "Validation failed. Please check your email and key.");
+            return (valid, error ?? "Activation failed. Please check your email and key.");
         }
         catch
         {
-            return (false, "Could not reach the activation server. Check your internet connection.");
+            return (false, $"Server returned an unexpected response (HTTP {(int)resp.StatusCode}).");
         }
     }
 }

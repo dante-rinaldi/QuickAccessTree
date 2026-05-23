@@ -91,7 +91,11 @@ echo json_encode(['success' => true, 'license_key' => $licenseKey, 'email' => $e
 // ─────────────────────────────────────────────────────────────────────────────
 
 function verifyPayPalOrder(string $orderId): bool {
-    $ch = curl_init('https://api-m.paypal.com/v1/oauth2/token');
+    $base = defined('SANDBOX_MODE') && SANDBOX_MODE
+        ? 'https://api-m.sandbox.paypal.com'
+        : 'https://api-m.paypal.com';
+
+    $ch = curl_init($base . '/v1/oauth2/token');
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_USERPWD        => PAYPAL_CLIENT_ID . ':' . PAYPAL_CLIENT_SECRET,
@@ -108,7 +112,7 @@ function verifyPayPalOrder(string $orderId): bool {
         return false;
     }
 
-    $ch = curl_init('https://api-m.paypal.com/v2/checkout/orders/' . urlencode($orderId));
+    $ch = curl_init($base . '/v2/checkout/orders/' . urlencode($orderId));
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 15,
@@ -143,40 +147,86 @@ function generateLicenseKey(): string {
 function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
     $firstName = $name ? explode(' ', $name)[0] : 'there';
     $subject   = 'Your Sidebar Buddy License Key';
+    $logoUrl   = 'https://raw.githubusercontent.com/dante-rinaldi/QuickAccessTree/master/site/logo/logo_sideBarBuddy_forEmail.jpg';
 
-    $html = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0f0f1a;font-family:\'Inter\',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f1a;padding:40px 20px;">
-  <tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="background:#1c1c2e;border-radius:12px;overflow:hidden;max-width:560px;">
-      <tr><td style="padding:28px 36px 20px;border-bottom:1px solid #2a2a3e;">
-        <span style="color:#e0e0e0;font-size:20px;font-weight:700;letter-spacing:-0.02em;">&#9632; Sidebar Buddy</span>
-      </td></tr>
-      <tr><td style="padding:32px 36px;">
-        <h1 style="color:#e0e0e0;font-size:22px;font-weight:600;margin:0 0 8px;">Thanks for your purchase, ' . htmlspecialchars($firstName) . '!</h1>
-        <p style="color:#8888a0;font-size:15px;margin:0 0 28px;">Here is your Sidebar Buddy license key. Keep this email safe.</p>
+    $html = '<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0b0b14;font-family:\'Segoe UI\',Arial,sans-serif;">
 
-        <div style="background:#0f0f1a;border:1px solid #2a2a3e;border-radius:8px;padding:20px 24px;margin-bottom:20px;">
-          <p style="color:#8888a0;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;">Your License Key</p>
-          <code style="color:#4f8ef7;font-size:20px;letter-spacing:0.12em;font-family:\'Courier New\',monospace;word-break:break-all;">' . htmlspecialchars($licenseKey) . '</code>
-        </div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0b0b14;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
-        <div style="background:#0f0f1a;border:1px solid #2a2a3e;border-radius:8px;padding:16px 24px;margin-bottom:28px;">
-          <p style="color:#8888a0;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Registered To</p>
-          <p style="color:#e0e0e0;font-size:15px;margin:0;">' . htmlspecialchars($email) . '</p>
-        </div>
-
-        <p style="color:#8888a0;font-size:14px;line-height:1.6;margin:0 0 24px;">
-          To activate: open Sidebar Buddy &rarr; click <strong style="color:#c0c0d0;">Settings</strong> &rarr; <strong style="color:#c0c0d0;">License</strong> &rarr; enter your email and paste the key above.
-        </p>
-
-        <a href="' . SITE_URL . '" style="display:inline-block;background:#4f8ef7;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 28px;border-radius:8px;">Visit Sidebar Buddy</a>
-      </td></tr>
-      <tr><td style="padding:18px 36px 24px;border-top:1px solid #2a2a3e;">
-        <p style="color:#505060;font-size:13px;margin:0;">Questions? <a href="mailto:support@sidebarbuddy.com" style="color:#4f8ef7;text-decoration:none;">support@sidebarbuddy.com</a></p>
-      </td></tr>
-    </table>
+  <!-- Logo header -->
+  <tr><td align="center" style="padding-bottom:28px;">
+    <img src="' . $logoUrl . '" alt="Sidebar Buddy" width="260" style="display:block;max-width:260px;height:auto;">
   </td></tr>
+
+  <!-- Card -->
+  <tr><td style="background:#13131f;border:1px solid #2a2a3e;border-radius:16px;overflow:hidden;">
+
+    <!-- Accent bar -->
+    <tr><td style="background:linear-gradient(90deg,#1a4a7a 0%,#0e639c 50%,#40c4ff 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+    <!-- Greeting -->
+    <tr><td style="padding:36px 40px 0;">
+      <h1 style="color:#f0f0f8;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.02em;">
+        You\'re all set, ' . htmlspecialchars($firstName) . '! &#127881;
+      </h1>
+      <p style="color:#9090b8;font-size:15px;line-height:1.6;margin:0 0 32px;">
+        Thanks for purchasing Sidebar Buddy. Your license key is below — keep this email somewhere safe.
+      </p>
+    </td></tr>
+
+    <!-- License key block -->
+    <tr><td style="padding:0 40px 24px;">
+      <div style="background:#0b0b14;border:1px solid #2a2a3e;border-radius:10px;padding:24px 28px;">
+        <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px;">Your License Key</p>
+        <p style="color:#40c4ff;font-size:22px;font-weight:700;letter-spacing:0.15em;font-family:\'Courier New\',monospace;margin:0 0 16px;word-break:break-all;">' . htmlspecialchars($licenseKey) . '</p>
+        <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px;">Registered To</p>
+        <p style="color:#c0c0d8;font-size:14px;margin:0;">' . htmlspecialchars($email) . '</p>
+      </div>
+    </td></tr>
+
+    <!-- How to activate -->
+    <tr><td style="padding:0 40px 28px;">
+      <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 14px;">How To Activate</p>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">1.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;padding-bottom:8px;">Open <strong style="color:#d0d0e8;">Sidebar Buddy</strong> and click the <strong style="color:#d0d0e8;">gear icon</strong> to open Settings.</td>
+        </tr>
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">2.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;padding-bottom:8px;">Go to the <strong style="color:#d0d0e8;">License</strong> tab.</td>
+        </tr>
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">3.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;">Enter your email address and paste the key above, then click <strong style="color:#d0d0e8;">Activate</strong>.</td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- CTA button -->
+    <tr><td style="padding:0 40px 36px;">
+      <a href="' . SITE_URL . '" style="display:inline-block;background:#0e639c;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 32px;border-radius:8px;letter-spacing:0.01em;">Visit sidebarbuddy.com</a>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="padding:20px 40px 24px;border-top:1px solid #1e1e30;">
+      <p style="color:#404060;font-size:13px;margin:0;">
+        Questions? Reply to this email or contact <a href="mailto:support@sidebarbuddy.com" style="color:#0e639c;text-decoration:none;">support@sidebarbuddy.com</a>
+      </p>
+    </td></tr>
+
+  </td></tr>
+  <!-- End card -->
+
 </table>
+</td></tr>
+</table>
+
 </body></html>';
 
     resendMail($email, $subject, $html);

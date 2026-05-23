@@ -61,7 +61,10 @@ public partial class TrialExpiredWindow : Window
             _settings.LicenseKey      = key;
             _settings.RegisteredEmail = email;
             _settingsSvc.Save(_settings);
-            Close();
+
+            FormPanel.Visibility    = Visibility.Collapsed;
+            SuccessSubText.Text     = $"Sidebar Buddy is now registered to\n{email}";
+            SuccessPanel.Visibility = Visibility.Visible;
         }
         else
         {
