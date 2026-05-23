@@ -208,9 +208,9 @@ public static class ThemeManager
                 break;
 
             case AppSkin.FrostedGlass:
-                ClearAcrylic();
-                Brush(r, "Theme.SidebarBg",      0x0A, 0x20, 0x50);
-                Brush(r, "Theme.HeaderBg",       0x07, 0x18, 0x38);
+                ApplyAcrylic(0x0050200A, 3); // Win10-style lighter blur, minimal tint
+                BrushA(r, "Theme.SidebarBg",     0x80, 0x0A, 0x20, 0x50); // 50% opaque
+                BrushA(r, "Theme.HeaderBg",      0xCC, 0x07, 0x18, 0x38); // 80% opaque
                 Brush(r, "Theme.PopupBg",        0x18, 0x20, 0x2E);
                 Brush(r, "Theme.BorderBrush",    0x5A, 0xB8, 0xFF);
                 Brush(r, "Theme.BorderSoft",     0x30, 0x78, 0xAA);
@@ -347,6 +347,23 @@ public static class ThemeManager
                 ClearAcrylic();
                 Apply(ThemeMode.Dark); // dark base — image overlays it
                 break;
+
+            case AppSkin.Clear:
+                ClearAcrylic(); // pure WPF transparency, no DWM effect
+                BrushA(r, "Theme.SidebarBg",      0x00, 0x00, 0x00, 0x00); // fully transparent
+                BrushA(r, "Theme.HeaderBg",        0x60, 0x08, 0x08, 0x08); // 38% dark header
+                Brush(r, "Theme.PopupBg",          0x1E, 0x1E, 0x1E);
+                BrushA(r, "Theme.BorderBrush",     0x99, 0xFF, 0xFF, 0xFF); // 60% white border
+                BrushA(r, "Theme.BorderSoft",      0x44, 0xFF, 0xFF, 0xFF);
+                BrushA(r, "Theme.ItemHover",       0x44, 0xFF, 0xFF, 0xFF);
+                BrushA(r, "Theme.ItemSelect",      0x66, 0xFF, 0xFF, 0xFF);
+                Brush(r, "Theme.PrimaryText",      0xFF, 0xFF, 0xFF);
+                Brush(r, "Theme.SecondaryText",    0xEE, 0xEE, 0xEE);
+                BrushA(r, "Theme.DimText",         0xAA, 0xFF, 0xFF, 0xFF);
+                BrushA(r, "Theme.ScrollThumb",     0x66, 0xFF, 0xFF, 0xFF);
+                BrushA(r, "Theme.QuickLinkHover",  0x44, 0xFF, 0xFF, 0xFF);
+                BrushA(r, "Theme.QuickLinkPress",  0x66, 0xFF, 0xFF, 0xFF);
+                break;
         }
     }
 
@@ -362,14 +379,14 @@ public static class ThemeManager
 
     // ── Acrylic (native) ──────────────────────────────────────────────
 
-    private static void ApplyAcrylic(int gradientColor)
+    private static void ApplyAcrylic(int gradientColor, int accentState = 4)
     {
         if (WindowHandle == nint.Zero) return;
         try
         {
             var accent = new NativeMethods.AccentPolicy
             {
-                AccentState   = 4, // ACCENT_ENABLE_ACRYLICBLURBEHIND
+                AccentState   = accentState,
                 AccentFlags   = 0,
                 GradientColor = gradientColor,
                 AnimationId   = 0

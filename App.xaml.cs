@@ -77,7 +77,9 @@ public partial class App : System.Windows.Application
         {
             Text    = "Sidebar Buddy",
             Visible = true,
-            Icon    = System.Drawing.SystemIcons.Application,
+            Icon    = System.Drawing.Icon.ExtractAssociatedIcon(
+                          System.Reflection.Assembly.GetExecutingAssembly().Location)
+                      ?? System.Drawing.SystemIcons.Application,
         };
 
         var menu = new Forms.ContextMenuStrip();

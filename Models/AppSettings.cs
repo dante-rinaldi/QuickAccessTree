@@ -9,7 +9,7 @@ public enum AppSkin
 {
     None, SolidDark, SolidLight, FrostedGlass, Mica,
     NeonCyber, Terminal, Paper, Synthwave, BrushedMetal, HighContrast,
-    Custom
+    Custom, Clear
 }
 
 public enum QuickLinkPosition { Top, Bottom }

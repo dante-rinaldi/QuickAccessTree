@@ -472,6 +472,7 @@
                             <ListBoxItem Content="Synthwave"            Tag="Synthwave"/>
                             <ListBoxItem Content="Brushed Metal"        Tag="BrushedMetal"/>
                             <ListBoxItem Content="High Contrast"        Tag="HighContrast"/>
+                            <ListBoxItem Content="Clear"                Tag="Clear"/>
                             <ListBoxItem Content="Custom"               Tag="Custom"/>
                         </ListBox>
 

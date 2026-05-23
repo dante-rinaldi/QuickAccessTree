@@ -517,6 +517,7 @@
     <option value="Synthwave">Synthwave</option>
     <option value="BrushedMetal">Brushed Metal</option>
     <option value="HighContrast">High Contrast</option>
+    <option value="Clear">Clear</option>
   </select>
   <button class="btn-reset" onclick="loadPreset(document.getElementById('presetSelect').value)">Reset to Preset</button>
 
@@ -905,6 +906,15 @@ const PRESETS = {
     scrollThumb:'#FFFFFF',
     quickLinkHover:'#5582AF', quickLinkPress:'#333333',
     bgOpacity: 100, glowIntensity: 0, texture: null,
+  },
+  Clear: {
+    sidebarBg:'#000000', headerBg:'#080808', popupBg:'#1E1E1E',
+    border:'#FFFFFF', borderSoft:'#AAAAAA',
+    itemHover:'#AAAAAA', itemSelect:'#CCCCCC',
+    primaryText:'#FFFFFF', secondaryText:'#EEEEEE', dimText:'#AAAAAA',
+    scrollThumb:'#AAAAAA',
+    quickLinkHover:'#AAAAAA', quickLinkPress:'#CCCCCC',
+    bgOpacity: 0, glowIntensity: 0, texture: null,
   },
 };
 

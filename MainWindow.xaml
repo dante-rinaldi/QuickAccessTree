@@ -4,7 +4,6 @@
         xmlns:conv="clr-namespace:SidebarBuddy.Converters"
         xmlns:models="clr-namespace:SidebarBuddy.Models"
         Title="Sidebar Buddy"
-        Icon="SidebarBuddy.ico"
         Width="220"
         WindowStyle="None"
         ResizeMode="NoResize"
