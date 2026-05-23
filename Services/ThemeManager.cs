@@ -320,7 +320,7 @@ public static class ThemeManager
                 Brush(r, "Theme.ItemHover",      0x6D, 0x83, 0x97);
                 Brush(r, "Theme.ItemSelect",     0x51, 0x64, 0x76);
                 Brush(r, "Theme.PrimaryText",    0xFF, 0xFF, 0xFF);
-                Brush(r, "Theme.SecondaryText",  0x87, 0x87, 0x87);
+                Brush(r, "Theme.SecondaryText",  0xFF, 0xFF, 0xFF);
                 Brush(r, "Theme.DimText",        0xA5, 0xC1, 0xE3);
                 Brush(r, "Theme.ScrollThumb",    0x73, 0x79, 0x82);
                 Brush(r, "Theme.QuickLinkHover", 0x67, 0x6E, 0x74);
