@@ -36,6 +36,9 @@ public class SettingsService
                 // Migrate legacy skins removed from the UI — they are identical to None.
                 if (s.Skin == AppSkin.SolidDark || s.Skin == AppSkin.SolidLight)
                     s.Skin = AppSkin.None;
+                // Existing installs pre-date the first-run seeding feature — mark as done.
+                if (!s.HasSeededDefaults && (s.Placements.Count > 0 || s.GroupNames.Count > 0))
+                    s.HasSeededDefaults = true;
                 return s;
             }
         }

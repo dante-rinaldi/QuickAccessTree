@@ -110,7 +110,14 @@ public partial class MainWindow : Window
             available[cf.Path] = n;
         }
 
-        bool placementsChanged = SyncPlacements(available);
+        bool seeded = false;
+        if (!_settings.HasSeededDefaults)
+        {
+            seeded = SeedFirstRunDefaults(available);
+            _settings.HasSeededDefaults = true;
+        }
+
+        bool placementsChanged = SyncPlacements(available) || seeded;
 
         // Unhook handlers from old nodes before we replace the registry
         foreach (var old in _nodesByPath.Values)
@@ -186,6 +193,62 @@ public partial class MainWindow : Window
         if (sender is not FolderNode n) return;
         _settings.ExpandedPaths[n.Path] = n.IsExpanded;
         _settingsSvc.Save(_settings);
+    }
+
+    private bool SeedFirstRunDefaults(Dictionary<string, FolderNode> available)
+    {
+        var specials = new[]
+        {
+            (Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Documents"),
+            (System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"), "Downloads"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),    "Music"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Pictures"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),   "Videos"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.Desktop),    "Desktop"),
+        };
+
+        // Only add folders that exist and aren't already in Quick Access
+        var toAdd = specials
+            .Where(s => Directory.Exists(s.Item1)
+                     && !available.ContainsKey(s.Item1))
+            .ToList();
+
+        // Get Quick Access folders in their pinned order
+        var qaOrdered = _qaSvc.GetPinnedFolders()
+            .Where(n => !_settings.RemovedPaths.Contains(n.Path, StringComparer.OrdinalIgnoreCase)
+                     && available.ContainsKey(n.Path))
+            .ToList();
+
+        // Place Quick Access folders at root first (preserves pinned order)
+        foreach (var qn in qaOrdered)
+            _settings.Placements.Add(new FolderPlacement { Path = qn.Path, ParentPath = null });
+
+        if (toAdd.Count == 0) return qaOrdered.Count > 0;
+
+        // Create "My Places" group
+        string groupPath = "§g§" + Guid.NewGuid().ToString("N");
+        _settings.GroupNames[groupPath] = "My Places";
+        var groupNode = new FolderNode { Name = "My Places", Path = groupPath, IsGroup = true };
+        ApplyColor(groupNode);
+        available[groupPath] = groupNode;
+
+        // Add standard folders
+        foreach (var (path, name) in toAdd)
+        {
+            _settings.CustomFolders.Add(new CustomFolder { Path = path, DisplayName = name });
+            var node = new FolderNode { Name = name, Path = path, IsCustom = true };
+            ApplyColor(node);
+            available[path] = node;
+        }
+
+        // Group at root after Quick Access
+        _settings.Placements.Add(new FolderPlacement { Path = groupPath, ParentPath = null });
+
+        // Standard folders as children of the group
+        foreach (var (path, _) in toAdd)
+            _settings.Placements.Add(new FolderPlacement { Path = path, ParentPath = groupPath });
+
+        return true;
     }
 
     /// <summary>

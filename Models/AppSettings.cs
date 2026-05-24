@@ -55,6 +55,9 @@ public class AppSettings
     public bool             ShowControlPanel    { get; set; } = false;
     public QuickLinkPosition QuickLinksPosition { get; set; } = QuickLinkPosition.Bottom;
 
+    // First-run seeding
+    public bool HasSeededDefaults { get; set; } = false;
+
     // License / trial
     public DateTime  TrialStartDate  { get; set; } = DateTime.UtcNow;
     public bool      IsRegistered    { get; set; } = false;
