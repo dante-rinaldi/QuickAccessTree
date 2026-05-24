@@ -76,11 +76,26 @@ try {
     exit;
 }
 
-// Verify email + key exist
-$stmt = $pdo->prepare('SELECT id FROM licenses WHERE email = ? AND license_key = ? LIMIT 1');
-$stmt->execute([$email, $key]);
+$revalidate = !empty($input['revalidate']);
+
+// Verify email + key exist and are active
+$stmt = $pdo->prepare('SELECT id FROM licenses WHERE email = ? AND license_key = ? AND status = ? LIMIT 1');
+$stmt->execute([$email, $key, 'active']);
 if (!$stmt->fetch()) {
-    echo json_encode(['valid' => false, 'error' => 'License not found for this email and key.']);
+    // Distinguish revoked from not found
+    $chk = $pdo->prepare('SELECT status FROM licenses WHERE email = ? AND license_key = ? LIMIT 1');
+    $chk->execute([$email, $key]);
+    $row = $chk->fetch();
+    if ($row && $row['status'] === 'revoked')
+        echo json_encode(['valid' => false, 'error' => 'This license has been revoked. Please contact support.']);
+    else
+        echo json_encode(['valid' => false, 'error' => 'License not found for this email and key.']);
+    exit;
+}
+
+// Revalidation mode: lightweight check only — no device upsert
+if ($revalidate) {
+    echo json_encode(['valid' => true]);
     exit;
 }
 

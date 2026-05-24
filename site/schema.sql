@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS licenses (
     payer_name   VARCHAR(255) NOT NULL DEFAULT '',
     license_key  VARCHAR(32)  NOT NULL UNIQUE,
     type         ENUM('paid','free') NOT NULL DEFAULT 'paid',
+    status       ENUM('active','revoked') NOT NULL DEFAULT 'active',
     amount       DECIMAL(8,2) NOT NULL DEFAULT 10.00,
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email_key (email, license_key)
@@ -25,6 +26,28 @@ CREATE TABLE IF NOT EXISTS license_activations (
     last_seen    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_key_device (license_key, device_id),
+    INDEX idx_license_key (license_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS account_codes (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email      VARCHAR(255) NOT NULL,
+    code       CHAR(6)      NOT NULL,
+    attempts   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    expires_at DATETIME     NOT NULL,
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS activation_transfers (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    license_key VARCHAR(32)  NOT NULL,
+    email       VARCHAR(255) NOT NULL,
+    old_device  VARCHAR(64)  NOT NULL,
+    reason      TEXT         DEFAULT NULL,
+    status      ENUM('pending','approved','denied') NOT NULL DEFAULT 'pending',
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at DATETIME     DEFAULT NULL,
     INDEX idx_license_key (license_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

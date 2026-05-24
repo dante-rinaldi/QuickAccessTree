@@ -82,6 +82,10 @@ public partial class App : System.Windows.Application
         _mainWindow.UpdateTrialBanner();
         _attachService.Start();
 
+        // Background license re-validation — non-blocking, never delays startup
+        if (Settings.IsRegistered)
+            _ = RevalidateLicenseInBackgroundAsync();
+
         SetupTrayIcon();
     }
 
@@ -136,6 +140,44 @@ public partial class App : System.Windows.Application
                 $"Could not open Settings:\n{ex.Message}\n\n{ex.GetType().Name}",
                 "Sidebar Buddy", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private async Task RevalidateLicenseInBackgroundAsync()
+    {
+        if (string.IsNullOrEmpty(Settings.LicenseKey) || string.IsNullOrEmpty(Settings.RegisteredEmail))
+            return;
+
+        bool? result = await LicenseService.RevalidateAsync(Settings.RegisteredEmail, Settings.LicenseKey);
+
+        if (result == true)
+        {
+            Settings.LastValidated = DateTime.UtcNow;
+            _settingsService.Save(Settings);
+            return;
+        }
+
+        if (result == null) // server unreachable — apply 7-day grace period
+        {
+            double daysSinceLast = Settings.LastValidated.HasValue
+                ? (DateTime.UtcNow - Settings.LastValidated.Value).TotalDays
+                : 0; // never validated yet (first launch after activation) — full grace
+            if (daysSinceLast <= 7) return;
+        }
+
+        // Key revoked/deleted, or grace period expired — deregister and block
+        await Dispatcher.InvokeAsync(() =>
+        {
+            Settings.IsRegistered    = false;
+            Settings.LicenseKey      = null;
+            Settings.RegisteredEmail = null;
+            Settings.LastValidated   = null;
+            _settingsService.Save(Settings);
+            _mainWindow?.UpdateTrialBanner();
+
+            var expired = new TrialExpiredWindow(Settings, _settingsService);
+            expired.ShowDialog();
+            if (!Settings.IsRegistered) Shutdown();
+        });
     }
 
     private void ForceShow()

@@ -56,10 +56,11 @@ public class AppSettings
     public QuickLinkPosition QuickLinksPosition { get; set; } = QuickLinkPosition.Bottom;
 
     // License / trial
-    public DateTime TrialStartDate  { get; set; } = DateTime.UtcNow;
-    public bool     IsRegistered    { get; set; } = false;
-    public string?  LicenseKey      { get; set; }
-    public string?  RegisteredEmail { get; set; }
+    public DateTime  TrialStartDate  { get; set; } = DateTime.UtcNow;
+    public bool      IsRegistered    { get; set; } = false;
+    public string?   LicenseKey      { get; set; }
+    public string?   RegisteredEmail { get; set; }
+    public DateTime? LastValidated   { get; set; }
 }
 
 public class CustomFolder

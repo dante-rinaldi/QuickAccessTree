@@ -2,68 +2,79 @@
 /**
  * Sidebar Buddy — Download Tracker
  *
- * Logs the click with IP + geolocation, emails the owner, then redirects
- * to the actual .exe download.
+ * Sends an admin notification email then redirects to the
+ * installer on GitHub Releases. Bot/crawler downloads are
+ * logged but do not trigger emails.
  */
 
 require_once __DIR__ . '/private/secrets.php';
 require_once __DIR__ . '/private/resend_mailer.php';
 
-// Resolve IP
-$rawIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$ip    = trim(explode(',', $rawIp)[0]);
-$ua    = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+define('WIN_URL', 'https://github.com/dante-rinaldi/sidebarbuddy-releases/releases/latest/download/SidebarBuddy-Setup.exe');
 
-// Geolocation (best-effort)
-$country = $city = null;
-if ($ip && $ip !== '127.0.0.1' && $ip !== '::1') {
-    $geo = @file_get_contents("http://ip-api.com/json/{$ip}?fields=country,city,regionName");
-    if ($geo) {
-        $gd      = json_decode($geo, true);
-        $country = $gd['country']    ?? null;
-        $city    = $gd['city']       ?? null;
-        $region  = $gd['regionName'] ?? null;
+$downloadUrl   = WIN_URL;
+$platformLabel = 'Windows';
+
+// Collect context
+$rawIp     = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$ip        = trim(explode(',', $rawIp)[0]);
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+$referer   = htmlspecialchars($_SERVER['HTTP_REFERER'] ?? 'direct', ENT_QUOTES, 'UTF-8');
+$timestamp = date('Y-m-d H:i:s') . ' UTC';
+
+// Rate limit: max 5 notification emails per IP per minute
+$rlKey  = sys_get_temp_dir() . '/sb_dl_rl_' . md5($ip) . '.json';
+$now    = time();
+$rlData = file_exists($rlKey) ? (json_decode(file_get_contents($rlKey), true) ?: []) : [];
+$rlData = array_values(array_filter($rlData, fn($t) => $now - $t < 60));
+$tooMany = count($rlData) >= 5;
+$rlData[] = $now;
+file_put_contents($rlKey, json_encode($rlData), LOCK_EX);
+
+// Bot / crawler detection
+$botPatterns = [
+    'googlebot','bingbot','slurp','duckduckbot','baiduspider','yandexbot',
+    'sogou','exabot','facebot','ia_archiver','semrushbot','ahrefsbot',
+    'mj12bot','dotbot','petalbot','crawler','spider','bot/','wget/','curl/',
+    'python-requests','go-http-client','java/','libwww','scrapy','headlesschrome',
+];
+$uaLower    = strtolower($userAgent);
+$isBot      = false;
+$botMatched = '';
+foreach ($botPatterns as $pat) {
+    if (str_contains($uaLower, $pat)) { $isBot = true; $botMatched = $pat; break; }
+}
+
+// Geolocation via ip-api.com (free, no key)
+$geoLabel = 'unavailable';
+if ($ip !== 'unknown' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+    $raw = @file_get_contents("http://ip-api.com/json/" . urlencode($ip) . "?fields=status,country,regionName,city",
+        false, stream_context_create(['http' => ['timeout' => 3]]));
+    if ($raw) {
+        $geo = json_decode($raw, true);
+        if (($geo['status'] ?? '') === 'success')
+            $geoLabel = implode(', ', array_filter([$geo['city'] ?? '', $geo['regionName'] ?? '', $geo['country'] ?? '']));
     }
 }
 
-// Log to DB
-try {
-    $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-        DB_USER, DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS downloads (
-            id         INT AUTO_INCREMENT PRIMARY KEY,
-            ip_address VARCHAR(45),
-            country    VARCHAR(100),
-            city       VARCHAR(100),
-            region     VARCHAR(100),
-            user_agent VARCHAR(500),
-            clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    ");
-
-    $pdo->prepare(
-        'INSERT INTO downloads (ip_address, country, city, region, user_agent) VALUES (?, ?, ?, ?, ?)'
-    )->execute([$ip, $country, $city, $region ?? null, $ua]);
-
-} catch (Exception $e) {
-    error_log('SB download log error: ' . $e->getMessage());
+// Send admin notification
+$mailSent = false;
+if (!$tooMany && !$isBot) {
+    $subject = '[Sidebar Buddy] New Download';
+    $body    = "Someone downloaded Sidebar Buddy!\n\n"
+             . "Platform:   {$platformLabel}\n"
+             . "Time:       {$timestamp}\n"
+             . "IP:         {$ip}\n"
+             . "Location:   {$geoLabel}\n"
+             . "Referrer:   {$referer}\n"
+             . "User Agent: {$userAgent}\n";
+    $mailSent = (bool)resendMailText(NOTIFY_EMAIL, $subject, $body);
 }
 
-// Email owner
-$loc     = implode(', ', array_filter([$city, $region ?? null, $country]));
-$subject = '[Sidebar Buddy] Download clicked';
-$body    = "Someone downloaded Sidebar Buddy.\n\n"
-         . "IP:       {$ip}\n"
-         . "Location: " . ($loc ?: 'Unknown') . "\n"
-         . "Time:     " . date('Y-m-d H:i:s T') . "\n"
-         . "Agent:    {$ua}\n";
-resendMailText(NOTIFY_EMAIL, $subject, $body);
+// Log everything
+$logLine = "[{$timestamp}] platform={$platformLabel} ip={$ip} location=\"{$geoLabel}\" bot=" . ($isBot ? "yes({$botMatched})" : 'no') . " mail=" . ($mailSent ? 'yes' : 'no') . "\n";
+@file_put_contents(__DIR__ . '/logs/downloads.log', $logLine, FILE_APPEND | LOCK_EX);
 
-// Redirect to actual file
-header('Location: ' . DOWNLOAD_URL);
+// Redirect to installer
+header('Location: ' . $downloadUrl, true, 302);
 exit;

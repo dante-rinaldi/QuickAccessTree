@@ -70,8 +70,8 @@ $licenseKey = generateLicenseKey();
 
 try {
     $pdo->prepare(
-        'INSERT INTO licenses (order_id, email, payer_name, license_key, type, amount) VALUES (?, ?, ?, ?, ?, ?)'
-    )->execute([$orderId, $email, $payerName, $licenseKey, 'paid', APP_PRICE]);
+        'INSERT INTO licenses (order_id, email, payer_name, license_key, type, status, amount) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    )->execute([$orderId, $email, $payerName, $licenseKey, 'paid', 'active', APP_PRICE]);
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Failed to save license']);

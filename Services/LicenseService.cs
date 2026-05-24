@@ -96,6 +96,35 @@ public static class LicenseService
         catch { return null; }
     }
 
+    // ── Background re-validation ───────────────────────────────────────────
+
+    /// <summary>
+    /// Lightweight check — verifies the stored key is still active without
+    /// updating device activation records. Returns true=valid, false=revoked/not found,
+    /// null=server unreachable (caller applies grace period).
+    /// </summary>
+    public static async Task<bool?> RevalidateAsync(string email, string key)
+    {
+        try
+        {
+            var payload = JsonSerializer.Serialize(new
+            {
+                email,
+                key,
+                device_id  = GetDeviceId(),
+                revalidate = true
+            });
+            var resp = await Http.PostAsync(
+                ServerBase + "/validate_license.php",
+                new StringContent(payload, Encoding.UTF8, "application/json"));
+
+            var body = JsonSerializer.Deserialize<JsonElement>(
+                await resp.Content.ReadAsStringAsync());
+            return body.GetProperty("valid").GetBoolean();
+        }
+        catch { return null; }
+    }
+
     // ── License validation ─────────────────────────────────────────────────
 
     /// <summary>
