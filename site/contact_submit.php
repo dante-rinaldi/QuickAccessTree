@@ -3,7 +3,6 @@
  * Sidebar Buddy — Contact Form Handler
  */
 
-define('SUPPORT_EMAIL', 'support@sidebarbuddy.com');
 require_once __DIR__ . '/private/secrets.php';
 require_once __DIR__ . '/private/resend_mailer.php';
 define('RATE_LIMIT_DIR', sys_get_temp_dir() . '/sb_contact_rl/');

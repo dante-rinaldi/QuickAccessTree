@@ -32,9 +32,12 @@ public partial class MainWindow : Window
 
     private static readonly string[] PresetColors =
     {
-        "#FFC000", "#FF5252", "#69F0AE", "#40C4FF",
-        "#FF9100", "#E040FB", "#00E5FF", "#FF4081",
-        "#BDBDBD", "#90A4AE", "#BCAAA4", "#FFFFFF",
+        // Bright
+        "#FFC000", "#FF5252", "#69F0AE", "#40C4FF", "#FF9100", "#E040FB",
+        "#00E5FF", "#FF4081", "#BDBDBD", "#90A4AE", "#BCAAA4", "#FFFFFF",
+        // Dark
+        "#B45309", "#991B1B", "#166534", "#1E40AF", "#9A3412", "#6D28D9",
+        "#0E7490", "#9D174D", "#4B5563", "#1E3A5F", "#57534E", "#374151",
     };
 
     // ── Init ──────────────────────────────────────────────────────────────
@@ -258,6 +261,18 @@ public partial class MainWindow : Window
     // ── Header buttons ────────────────────────────────────────────────────
 
     public void ReloadTree() => LoadTree();
+
+    public void ClearTreeSelection()
+    {
+        _suppressNavigation = true;
+        try
+        {
+            if (FolderTree.SelectedItem is FolderNode selected)
+                FindTreeViewItem(FolderTree, selected)
+                    ?.SetValue(TreeViewItem.IsSelectedProperty, false);
+        }
+        finally { _suppressNavigation = false; }
+    }
 
     private void SettingsBtn_Click(object sender, RoutedEventArgs e)
         => ((App)Application.Current).OpenSettings();

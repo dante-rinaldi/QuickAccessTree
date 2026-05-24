@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS licenses (
     email        VARCHAR(255) NOT NULL,
     payer_name   VARCHAR(255) NOT NULL DEFAULT '',
     license_key  VARCHAR(32)  NOT NULL UNIQUE,
-    type         ENUM('paid','free') NOT NULL DEFAULT 'paid',
+    type         ENUM('paid','free','comp') NOT NULL DEFAULT 'paid',
     status       ENUM('active','revoked') NOT NULL DEFAULT 'active',
     amount       DECIMAL(8,2) NOT NULL DEFAULT 10.00,
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -28,6 +28,9 @@ public class ExplorerAttachService : IDisposable
     public bool   AutoHide      { get; set; } = false;
     public bool   IsCollapsed   { get; set; } = false;
 
+    // Invoked (on the UI thread) whenever a new Explorer window is tracked.
+    public Action? OnReattached { get; set; }
+
     private const double CollapsedWidthDip = 20.0;
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
@@ -167,9 +170,11 @@ public class ExplorerAttachService : IDisposable
     private void Track(nint hwnd)
     {
         if (IsRecycleBin(hwnd)) return;
+        bool isNew = hwnd != _explorerHwnd;
         _explorerHwnd = hwnd;
         SnapSidebar(hwnd);
         ShowSidebar(immediate: false);
+        if (isNew) OnReattached?.Invoke();
     }
 
     public void ExplicitDetach()

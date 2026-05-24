@@ -16,9 +16,12 @@ public partial class SettingsWindow : Window
 
     private static readonly string[] HighlightPresets =
     {
-        "#FFC000", "#FF5252", "#69F0AE", "#40C4FF",
-        "#FF9100", "#E040FB", "#00E5FF", "#FF4081",
-        "#BDBDBD", "#90A4AE", "#BCAAA4", "#FFFFFF",
+        // Bright
+        "#FFC000", "#FF5252", "#69F0AE", "#40C4FF", "#FF9100", "#E040FB",
+        "#00E5FF", "#FF4081", "#BDBDBD", "#90A4AE", "#BCAAA4", "#FFFFFF",
+        // Dark
+        "#B45309", "#991B1B", "#166534", "#1E40AF", "#9A3412", "#6D28D9",
+        "#0E7490", "#9D174D", "#4B5563", "#1E3A5F", "#57534E", "#374151",
     };
 
     public SettingsWindow(
@@ -339,14 +342,20 @@ public partial class SettingsWindow : Window
         if (sender is not Border { Tag: string hex }) return;
         _settings.HighlightColor = hex;
         BuildHighlightSwatches(); // refresh selection ring
-        if (!_loading) LiveApply();
+        if (!_loading) ApplyAppearanceOnly();
     }
 
     private void ClearHighlight_Click(object sender, RoutedEventArgs e)
     {
         _settings.HighlightColor = null;
         BuildHighlightSwatches();
-        if (!_loading) LiveApply();
+        if (!_loading) ApplyAppearanceOnly();
+    }
+
+    private void ApplyAppearanceOnly()
+    {
+        ThemeManager.ApplyAppearance(_settings);
+        _settingsSvc.Save(_settings);
     }
 
     private void OpacitySlider_ValueChanged(object sender,

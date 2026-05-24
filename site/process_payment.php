@@ -152,14 +152,14 @@ function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
     $html = '<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0b0b14;font-family:\'Segoe UI\',Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#000000;font-family:\'Segoe UI\',Arial,sans-serif;" bgcolor="#000000">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0b0b14;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="background:#000000;padding:40px 16px;">
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
   <!-- Logo header -->
-  <tr><td align="center" style="padding-bottom:28px;">
+  <tr><td align="center" style="padding-bottom:28px;background:#000000;padding:20px 0 28px;">
     <img src="' . $logoUrl . '" alt="Sidebar Buddy" width="260" style="display:block;max-width:260px;height:auto;">
   </td></tr>
 
@@ -216,7 +216,7 @@ function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
     <!-- Footer -->
     <tr><td style="padding:20px 40px 24px;border-top:1px solid #1e1e30;">
       <p style="color:#404060;font-size:13px;margin:0;">
-        Questions? Reply to this email or contact <a href="mailto:support@sidebarbuddy.com" style="color:#0e639c;text-decoration:none;">support@sidebarbuddy.com</a>
+        Questions? Reply to this email or <a href="https://sidebarbuddy.com/contact" style="color:#0e639c;text-decoration:none;">contact support</a>
       </p>
     </td></tr>
 

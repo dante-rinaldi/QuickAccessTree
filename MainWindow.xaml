@@ -586,7 +586,7 @@
                                Foreground="{DynamicResource Theme.DimText}"
                                FontSize="11"
                                Margin="0,0,0,6"/>
-                    <WrapPanel x:Name="ColorSwatchPanel" Width="156"/>
+                    <WrapPanel x:Name="ColorSwatchPanel" Width="168"/>
                     <Button Content="Reset to default"
                             Margin="0,6,0,0"
                             FontSize="11"

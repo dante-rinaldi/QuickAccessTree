@@ -118,7 +118,7 @@ if ($device_id && preg_match('/^[0-9a-f]{32,64}$/', $device_id)) {
                 'valid'      => false,
                 'error_code' => 'activation_limit',
                 'error'      => 'This license is active on ' . ACTIVATION_LIMIT . ' computers — the maximum allowed. '
-                              . 'Email support@sidebarbuddy.com to free a slot.',
+                              . 'Visit sidebarbuddy.com/contact to free a slot.',
             ]);
             exit;
         }
@@ -151,7 +151,7 @@ if ($device_id && preg_match('/^[0-9a-f]{32,64}$/', $device_id)) {
                  . "  Location: " . ($country  ?: 'unknown') . "\n"
                  . "  Time:     " . date('Y-m-d H:i:s T') . "\n\n"
                  . "If this was you, no action needed.\n"
-                 . "If it wasn't, email support@sidebarbuddy.com.\n\n"
+                 . "If it wasn't, visit sidebarbuddy.com/contact.\n\n"
                  . "— Sidebar Buddy";
         resendMailText($email, $subject, $body);
     }

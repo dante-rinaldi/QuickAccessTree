@@ -59,9 +59,44 @@ if (isset($_GET['action']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['code_attempts']  = 0;
             $_SESSION['code_sends'][]   = $now;
 
-            $subject = 'Sidebar Buddy — Your Verification Code';
-            $msg     = "Your Sidebar Buddy verification code is: {$code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.";
-            resendMailText($email, $subject, $msg);
+            $subject  = 'Sidebar Buddy — Your Verification Code';
+            $logoUrl  = 'https://raw.githubusercontent.com/dante-rinaldi/QuickAccessTree/master/site/logo/logo_sideBarBuddy_forEmail.jpg';
+            $codeHtml = '<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#000000;font-family:\'Segoe UI\',Arial,sans-serif;" bgcolor="#000000">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="background:#000000;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+  <tr><td align="center" bgcolor="#000000" style="background:#000000;padding:20px 0 28px;">
+    <img src="' . $logoUrl . '" alt="Sidebar Buddy" width="260" style="display:block;max-width:260px;height:auto;">
+  </td></tr>
+  <tr><td style="background:#13131f;border:1px solid #2a2a3e;border-radius:16px;overflow:hidden;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="background:linear-gradient(90deg,#1a4a7a 0%,#0e639c 50%,#40c4ff 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td style="padding:36px 40px 0;">
+      <h1 style="color:#f0f0f8;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.02em;">Your verification code</h1>
+      <p style="color:#9090b8;font-size:15px;line-height:1.6;margin:0 0 32px;">Use the code below to sign in to your Sidebar Buddy account. It expires in 10 minutes.</p>
+    </td></tr>
+    <tr><td style="padding:0 40px 32px;">
+      <div style="background:#0b0b14;border:1px solid #2a2a3e;border-radius:10px;padding:28px;text-align:center;">
+        <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 16px;">Verification Code</p>
+        <p style="color:#40c4ff;font-size:36px;font-weight:700;letter-spacing:0.3em;font-family:\'Courier New\',monospace;margin:0;">' . htmlspecialchars($code) . '</p>
+      </div>
+    </td></tr>
+    <tr><td style="padding:0 40px 36px;">
+      <p style="color:#6060a0;font-size:13px;margin:0;">If you didn\'t request this, you can safely ignore this email — your account is secure.</p>
+    </td></tr>
+    <tr><td style="padding:20px 40px 24px;border-top:1px solid #1e1e30;">
+      <p style="color:#404060;font-size:13px;margin:0;">Questions? <a href="https://sidebarbuddy.com/contact" style="color:#0e639c;text-decoration:none;">Contact support</a></p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>';
+            resendMail($email, $subject, $codeHtml);
             echo json_encode(['success'=>true]); exit;
 
         case 'verify_code':

@@ -41,6 +41,22 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         Settings = _settingsService.Load();
 
+        // Fix: IsRegistered=true with no key is an invalid state — treat as trial
+        if (Settings.IsRegistered &&
+            (string.IsNullOrEmpty(Settings.LicenseKey) || string.IsNullOrEmpty(Settings.RegisteredEmail)))
+        {
+            Settings.IsRegistered    = false;
+            Settings.LicenseKey      = null;
+            Settings.RegisteredEmail = null;
+            Settings.LastValidated   = null;
+            _settingsService.Save(Settings);
+        }
+
+        // For trial users: get authoritative trial start date from server (non-blocking best-effort).
+        // This overwrites a locally manipulated TrialStartDate with the server's record for this device.
+        if (!Settings.IsRegistered)
+            _ = SyncTrialStartDateAsync();
+
         // Block expired trial before showing anything
         if (!Settings.IsRegistered && (DateTime.UtcNow - Settings.TrialStartDate).Days >= 15)
         {
@@ -80,6 +96,7 @@ public partial class App : System.Windows.Application
             _mainWindow, Settings.SidebarWidthDip, Settings.DockSide);
         _mainWindow.Initialize(Settings, _attachService, _settingsService);
         _mainWindow.UpdateTrialBanner();
+        _attachService.OnReattached = _mainWindow.ClearTreeSelection;
         _attachService.Start();
 
         // Background license re-validation — non-blocking, never delays startup
@@ -139,6 +156,31 @@ public partial class App : System.Windows.Application
             System.Windows.MessageBox.Show(
                 $"Could not open Settings:\n{ex.Message}\n\n{ex.GetType().Name}",
                 "Sidebar Buddy", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private async Task SyncTrialStartDateAsync()
+    {
+        var result = await LicenseService.CheckTrialAsync();
+        if (result == null) return; // server unreachable — keep local date
+
+        // Server is authoritative: overwrite local trial start date
+        if (result.Value.StartDate > Settings.TrialStartDate ||
+            result.Value.StartDate < Settings.TrialStartDate.AddDays(-1))
+        {
+            Settings.TrialStartDate = result.Value.StartDate;
+            _settingsService.Save(Settings);
+        }
+
+        // If server says expired but local check hasn't caught it yet, block now
+        if (result.Value.DaysRemaining <= 0 && !Settings.IsRegistered)
+        {
+            await Dispatcher.InvokeAsync(() =>
+            {
+                var expired = new TrialExpiredWindow(Settings, _settingsService);
+                expired.ShowDialog();
+                if (!Settings.IsRegistered) Shutdown();
+            });
         }
     }
 

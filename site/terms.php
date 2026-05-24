@@ -129,7 +129,7 @@ $pageTitle = 'Terms of Service - Sidebar Buddy';
     <p>We may update these terms from time to time. Continued use of the App after changes are posted constitutes acceptance of the updated terms. The "Last updated" date at the top of this page reflects the most recent revision.</p>
 
     <h2>13. Contact</h2>
-    <p>Questions about these terms? Email us at <a href="mailto:support@sidebarbuddy.com">support@sidebarbuddy.com</a>.</p>
+    <p>Questions about these terms? <a href="/contact">Contact us here</a>.</p>
   </div>
 
   <footer>

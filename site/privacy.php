@@ -132,7 +132,7 @@ $pageTitle = 'Privacy Policy - Sidebar Buddy';
     <p>We may update this policy from time to time. The "Last updated" date at the top reflects the most recent revision. Continued use of the App or website after changes are posted constitutes acceptance.</p>
 
     <h2>11. Contact</h2>
-    <p>Questions or data requests? Email us at <a href="mailto:support@sidebarbuddy.com">support@sidebarbuddy.com</a>.</p>
+    <p>Questions or data requests? <a href="/contact">Contact us here</a>.</p>
   </div>
 
   <footer>

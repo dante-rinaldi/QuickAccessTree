@@ -119,11 +119,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comp_email'])) {
 
             // Email the key to the recipient
             $subject = 'Your Sidebar Buddy License Key';
-            $body    = "Hi,\n\nHere is your complimentary Sidebar Buddy license.\n\n"
-                     . "Key: {$compKey}\n\n"
-                     . "To activate: open Sidebar Buddy → Settings → License and enter your email and key.\n\n"
-                     . "— Sidebar Buddy";
-            resendMailText($compEmail, $subject, $body);
+            $logoUrl = 'https://raw.githubusercontent.com/dante-rinaldi/QuickAccessTree/master/site/logo/logo_sideBarBuddy_forEmail.jpg';
+            $compHtml = '<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#000000;font-family:\'Segoe UI\',Arial,sans-serif;" bgcolor="#000000">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="background:#000000;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+  <tr><td align="center" bgcolor="#000000" style="background:#000000;padding:20px 0 28px;">
+    <img src="' . $logoUrl . '" alt="Sidebar Buddy" width="260" style="display:block;max-width:260px;height:auto;">
+  </td></tr>
+  <tr><td style="background:#13131f;border:1px solid #2a2a3e;border-radius:16px;overflow:hidden;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="background:linear-gradient(90deg,#1a4a7a 0%,#0e639c 50%,#40c4ff 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td style="padding:36px 40px 0;">
+      <h1 style="color:#f0f0f8;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.02em;">You\'ve got a complimentary license!</h1>
+      <p style="color:#9090b8;font-size:15px;line-height:1.6;margin:0 0 32px;">Here is your Sidebar Buddy license key, courtesy of Inferno Creative Studio. Keep this email somewhere safe.</p>
+    </td></tr>
+    <tr><td style="padding:0 40px 24px;">
+      <div style="background:#0b0b14;border:1px solid #2a2a3e;border-radius:10px;padding:24px 28px;">
+        <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px;">Your License Key</p>
+        <p style="color:#40c4ff;font-size:22px;font-weight:700;letter-spacing:0.15em;font-family:\'Courier New\',monospace;margin:0 0 16px;word-break:break-all;">' . htmlspecialchars($compKey) . '</p>
+        <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px;">Registered To</p>
+        <p style="color:#c0c0d8;font-size:14px;margin:0;">' . htmlspecialchars($compEmail) . '</p>
+      </div>
+    </td></tr>
+    <tr><td style="padding:0 40px 28px;">
+      <p style="color:#6060a0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 14px;">How To Activate</p>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">1.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;padding-bottom:8px;">Open <strong style="color:#d0d0e8;">Sidebar Buddy</strong> and click the <strong style="color:#d0d0e8;">gear icon</strong> to open Settings.</td>
+        </tr>
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">2.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;padding-bottom:8px;">Go to the <strong style="color:#d0d0e8;">License</strong> tab.</td>
+        </tr>
+        <tr>
+          <td width="28" valign="top" style="color:#40c4ff;font-size:15px;font-weight:700;padding-top:1px;">3.</td>
+          <td style="color:#9090b8;font-size:14px;line-height:1.6;">Enter your email and paste the key above, then click <strong style="color:#d0d0e8;">Activate</strong>.</td>
+        </tr>
+      </table>
+    </td></tr>
+    <tr><td style="padding:0 40px 36px;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td style="padding-right:12px;"><a href="https://sidebarbuddy.com/download" style="display:inline-block;background:#0e639c;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 32px;border-radius:8px;letter-spacing:0.01em;">Download for Windows</a></td>
+        <td><a href="https://sidebarbuddy.com" style="display:inline-block;background:transparent;border:1px solid #2a2a3e;color:#9090b8;text-decoration:none;font-size:15px;font-weight:600;padding:13px 24px;border-radius:8px;letter-spacing:0.01em;">Visit sidebarbuddy.com</a></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:20px 40px 24px;border-top:1px solid #1e1e30;">
+      <p style="color:#404060;font-size:13px;margin:0;">Questions? Reply to this email or <a href="https://sidebarbuddy.com/contact" style="color:#0e639c;text-decoration:none;">contact support</a></p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>';
+            resendMail($compEmail, $subject, $compHtml);
 
             $message = "Comp key {$compKey} granted to {$compEmail} and emailed.";
         } catch (PDOException $ex) {
