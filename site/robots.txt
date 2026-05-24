@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Disallow: /logs/
+Disallow: /process_payment.php
+Disallow: /validate_license.php
+Disallow: /trial_status.php
+Disallow: /notify.php
+Disallow: /contact_submit.php
+Disallow: /account.php
+Disallow: /account
+Disallow: /skin-designer.html
+
+Sitemap: https://sidebarbuddy.com/sitemap.xml
