@@ -229,6 +229,20 @@ $downloads = $pdo->query(
     'SELECT * FROM downloads ORDER BY clicked_at DESC LIMIT 200'
 )->fetchAll();
 
+// Pre-fetch activation details for visible licenses (for expandable rows)
+$activationDetails = [];
+if ($tab === 'licenses' && $licenses) {
+    $keys         = array_column($licenses, 'license_key');
+    $placeholders = implode(',', array_fill(0, count($keys), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT * FROM license_activations WHERE license_key IN ($placeholders) ORDER BY last_seen DESC"
+    );
+    $stmt->execute($keys);
+    foreach ($stmt->fetchAll() as $act) {
+        $activationDetails[$act['license_key']][] = $act;
+    }
+}
+
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -377,7 +391,14 @@ $downloads = $pdo->query(
             <td><span class="mono"><?= htmlspecialchars($lic['license_key']) ?></span></td>
             <td><span class="badge <?= $lic['type'] ?>"><?= htmlspecialchars($lic['type']) ?></span></td>
             <td><?= $lic['amount'] > 0 ? '$' . number_format((float)$lic['amount'], 2) : '—' ?></td>
-            <td><?= (int)$lic['activations'] ?> / 2</td>
+            <td>
+              <?php if ((int)$lic['activations'] > 0): ?>
+                <button class="act-toggle" data-key="<?= htmlspecialchars($lic['license_key']) ?>"
+                        style="background:none;border:none;color:#60a5fa;cursor:pointer;font-size:13px;padding:0;text-decoration:underline;">
+                  <?= (int)$lic['activations'] ?> / 2 ▾
+                </button>
+              <?php else: ?> 0 / 2 <?php endif; ?>
+            </td>
             <td>
               <form method="POST" onsubmit="return confirm('Revoke this license?')">
                 <input type="hidden" name="revoke_key" value="<?= htmlspecialchars($lic['license_key']) ?>">
@@ -385,6 +406,34 @@ $downloads = $pdo->query(
               </form>
             </td>
           </tr>
+          <?php if (!empty($activationDetails[$lic['license_key']])): ?>
+          <tr id="act-<?= htmlspecialchars($lic['license_key']) ?>" style="display:none;background:#0c0c15;">
+            <td colspan="8" style="padding:8px 10px 14px 28px;">
+              <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                <thead><tr>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">Device ID</th>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">MAC Address</th>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">Hostname</th>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">IP</th>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">Country</th>
+                  <th style="text-align:left;color:#444460;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:4px 8px;border-bottom:1px solid #1e1e2e;">Last Seen</th>
+                </tr></thead>
+                <tbody>
+                  <?php foreach ($activationDetails[$lic['license_key']] as $act): ?>
+                  <tr>
+                    <td style="padding:5px 8px;font-family:'Courier New',monospace;font-size:11px;color:#7070a0;word-break:break-all;"><?= htmlspecialchars($act['device_id']) ?></td>
+                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['mac_address'] ?? '—') ?></td>
+                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['hostname'] ?? '—') ?></td>
+                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['ip_address'] ?? '—') ?></td>
+                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['country'] ?? '—') ?></td>
+                    <td style="padding:5px 8px;" class="muted"><?= htmlspecialchars(substr($act['last_seen'] ?? '', 0, 16)) ?></td>
+                  </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <?php endif; ?>
           <?php endforeach; ?>
           <?php if (!$licenses): ?>
             <tr><td colspan="8" class="muted" style="padding:20px;">No licenses yet.</td></tr>
@@ -404,6 +453,7 @@ $downloads = $pdo->query(
             <th>Launches</th>
             <th>IP</th>
             <th>Location</th>
+            <th>MAC Address</th>
             <th>Device ID</th>
           </tr>
         </thead>
@@ -415,7 +465,8 @@ $downloads = $pdo->query(
             <td><?= (int)$t['launch_count'] ?></td>
             <td class="mono"><?= htmlspecialchars($t['ip_address'] ?? '—') ?></td>
             <td><?= htmlspecialchars(implode(', ', array_filter([$t['city'] ?? null, $t['country'] ?? null])) ?: '—') ?></td>
-            <td class="muted" style="font-size:11px;"><?= htmlspecialchars(substr($t['device_id'] ?? '', 0, 16)) ?>…</td>
+            <td class="mono"><?= htmlspecialchars($t['mac_address'] ?? '—') ?></td>
+            <td style="font-family:'Courier New',monospace;font-size:11px;color:#7070a0;word-break:break-all;max-width:200px;"><?= htmlspecialchars($t['device_id'] ?? '—') ?></td>
           </tr>
           <?php endforeach; ?>
           <?php if (!$trials): ?>
@@ -487,5 +538,13 @@ $downloads = $pdo->query(
   <?php endif; ?>
 
 </div>
+<script>
+  document.querySelectorAll('.act-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = document.getElementById('act-' + btn.dataset.key);
+      if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+    });
+  });
+</script>
 </body>
 </html>

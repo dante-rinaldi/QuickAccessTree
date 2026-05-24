@@ -9,12 +9,11 @@
 </head>
 <body>
 
-  <!-- COMING SOON BANNER -->
-  <div style="background:#ffffff;color:#111;text-align:center;padding:10px 16px;font-size:14px;font-weight:600;letter-spacing:0.02em;position:sticky;top:0;z-index:1000;box-shadow:0 1px 0 rgba(0,0,0,0.1);">
-    COMING SOON -
-    <a href="#pricing" onclick="setTimeout(()=>{document.getElementById('notify-email').focus()},400)"
-       style="color:#0e639c;text-decoration:underline;cursor:pointer;">
-      leave your email for a free copy!
+  <!-- DOWNLOAD BANNER -->
+  <div style="background:#0e639c;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:600;letter-spacing:0.02em;position:sticky;top:0;z-index:1000;box-shadow:0 1px 0 rgba(0,0,0,0.15);">
+    Sidebar Buddy is out! &mdash;
+    <a href="/download" style="color:#fff;text-decoration:underline;cursor:pointer;">
+      Download free for Windows &darr;
     </a>
   </div>
 
@@ -285,20 +284,12 @@
             <li>&#10003; No account required</li>
             <li>&#10003; No credit card</li>
           </ul>
-          <p style="font-size:18px;font-weight:700;color:#ffffff;margin:0 0 12px;text-align:center;">
-            Get a free copy when it launches -
-          </p>
-          <form id="notify-form" style="display:flex;gap:6px;">
-            <input id="notify-email" type="email" placeholder="your@email.com" required
-              style="flex:1;min-width:0;background:#1c1c2e;border:1px solid #2a2a3e;border-radius:6px;
-                     color:#e0e0e0;font-size:13px;padding:9px 12px;outline:none;"/>
-            <button type="submit"
-              style="background:#0e639c;color:#fff;border:none;border-radius:6px;
-                     font-size:13px;font-weight:600;padding:9px 16px;cursor:pointer;white-space:nowrap;">
-              Notify Me
-            </button>
-          </form>
-          <p id="notify-msg" style="display:none;font-size:12px;text-align:center;margin:8px 0 0;"></p>
+          <a href="/download"
+             style="display:block;background:#0e639c;color:#fff;text-align:center;text-decoration:none;
+                    font-size:15px;font-weight:700;border-radius:8px;padding:12px 20px;margin-top:16px;
+                    letter-spacing:0.02em;">
+            &#8595; Download Free for Windows
+          </a>
         </div>
 
         <div class="pricing-card full featured">
@@ -515,35 +506,6 @@
     });
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeTosModal();
-    });
-  </script>
-  <script>
-    document.getElementById('notify-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = document.getElementById('notify-email').value.trim();
-      const msg   = document.getElementById('notify-msg');
-      fetch('notify.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-      .then(r => r.json())
-      .then(data => {
-        this.style.display = 'none';
-        msg.style.display  = 'block';
-        if (data.success) {
-          msg.style.color   = '#6fcf97';
-          msg.textContent   = "You're on the list! We'll send your free copy when it launches.";
-        } else {
-          msg.style.color   = '#ff6b6b';
-          msg.textContent   = data.error || 'Something went wrong. Please try again.';
-        }
-      })
-      .catch(() => {
-        msg.style.display = 'block';
-        msg.style.color   = '#ff6b6b';
-        msg.textContent   = 'Something went wrong. Please try again.';
-      });
     });
   </script>
 
