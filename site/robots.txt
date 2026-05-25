@@ -7,6 +7,7 @@ Disallow: /validate_license.php
 Disallow: /trial_status.php
 Disallow: /notify.php
 Disallow: /contact_submit.php
+Disallow: /student_license.php
 Disallow: /account.php
 Disallow: /account
 Disallow: /skin-designer.html

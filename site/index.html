@@ -28,7 +28,28 @@
   <link rel="apple-touch-icon" href="/logo/logo%20SideBar%20Buddy%20Icon.png" />
 
   <link rel="stylesheet" href="style.css" />
-  <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
+  <style>
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .students-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+    @media(max-width:700px){.students-inner{grid-template-columns:1fr}}
+    .students-text h2{font-size:1.6rem;margin-bottom:16px;color:var(--text)}
+    .students-text p{color:#c0c0d0;line-height:1.75;font-size:0.95rem;margin-bottom:20px}
+    .students-perks{padding-left:1.2em;margin:0}
+    .students-perks li{color:#c0c0d0;font-size:0.92rem;line-height:1.9}
+    .students-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px}
+    .students-card label{display:block;font-size:0.85rem;color:#d4d4e8;margin-bottom:6px}
+    .students-card input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:0.9rem;padding:10px 14px;outline:none;transition:border-color 0.15s;box-sizing:border-box}
+    .students-card input:focus{border-color:var(--accent)}
+    .students-form-group{margin-bottom:18px}
+    .students-hint{font-size:0.78rem;color:#888899;margin-top:4px;display:block}
+    .btn-student{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:0.92rem;font-weight:700;cursor:pointer;transition:background 0.15s,opacity 0.15s;margin-top:4px}
+    .btn-student:hover{background:#3a8eef}
+    .btn-student:disabled{opacity:0.5;cursor:not-allowed}
+    .student-note{font-size:0.78rem;color:#888899;text-align:center;margin-top:10px}
+    .student-feedback{margin-top:14px;font-size:0.88rem;padding:10px 14px;border-radius:6px;display:none}
+    .student-feedback.success{display:block;background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
+    .student-feedback.error{display:block;background:rgba(255,107,107,0.1);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3)}
+  </style>
   <script src="https://www.paypal.com/sdk/js?client-id=AQjI7ybj9m9OBeYxxLC4VioagxClfxHOR7LGLOx6NZytFd0zzFPS-uiMxNPFzY2wHShGeGMt173Lv67K&currency=USD"></script>
 </head>
 <body>
@@ -337,6 +358,40 @@
     </div>
   </section>
 
+  <!-- STUDENT LICENSE -->
+  <section class="faq" id="students">
+    <div class="section-inner">
+      <div class="students-inner">
+        <div class="students-text">
+          <h2>We Support Students</h2>
+          <p>Are you a student? We believe good tools shouldn't be gated behind a paycheck. Submit a request from your <strong>.edu email address</strong> and we'll send you a free full license — on us.</p>
+          <ul class="students-perks">
+            <li>Full license, no restrictions</li>
+            <li>Same lifetime access as paid users</li>
+            <li>No credit card required</li>
+          </ul>
+        </div>
+        <div class="students-card">
+          <form id="studentForm" novalidate>
+            <input type="text" name="website" class="sr-only" tabindex="-1" autocomplete="off">
+            <div class="students-form-group">
+              <label for="studentName">Your Name</label>
+              <input type="text" id="studentName" placeholder="Jane Smith" required>
+            </div>
+            <div class="students-form-group">
+              <label for="studentEmail">.EDU Email Address</label>
+              <input type="email" id="studentEmail" placeholder="jane@university.edu" required>
+              <span class="students-hint">Must end in .edu</span>
+            </div>
+            <button type="submit" class="btn-student" id="studentSubmitBtn">Request Free License</button>
+            <p class="student-note">We'll review and send your license within 24–48 hours.</p>
+            <div id="studentFeedback" class="student-feedback" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-inner">
@@ -578,6 +633,60 @@
         if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   show(current - 1);
       });
     })();
+  </script>
+
+  <script>
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var btn      = document.getElementById('studentSubmitBtn');
+      var feedback = document.getElementById('studentFeedback');
+      var name     = document.getElementById('studentName').value.trim();
+      var email    = document.getElementById('studentEmail').value.trim();
+      var honeypot = this.querySelector('input[name="website"]').value;
+
+      feedback.className = 'student-feedback';
+      feedback.textContent = '';
+
+      if (!name || !email) {
+        feedback.className = 'student-feedback error';
+        feedback.textContent = 'Please fill in all fields.';
+        return;
+      }
+      if (!email.toLowerCase().endsWith('.edu')) {
+        feedback.className = 'student-feedback error';
+        feedback.textContent = 'Please enter a valid .edu email address.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      fetch('student_license.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, website: honeypot })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          feedback.className = 'student-feedback success';
+          feedback.textContent = 'Request received! Check your .edu inbox within 24–48 hours.';
+          document.getElementById('studentForm').reset();
+          btn.textContent = 'Request Sent';
+        } else {
+          feedback.className = 'student-feedback error';
+          feedback.textContent = data.error || 'Something went wrong. Please try again.';
+          btn.disabled = false;
+          btn.textContent = 'Request Free License';
+        }
+      })
+      .catch(function() {
+        feedback.className = 'student-feedback error';
+        feedback.textContent = 'Network error. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Request Free License';
+      });
+    });
   </script>
 
   <!-- Structured Data -->
