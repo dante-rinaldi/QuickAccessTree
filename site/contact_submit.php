@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Contact Form Handler
+ * Sidebar Buddy - Contact Form Handler
  */
 
 require_once __DIR__ . '/private/secrets.php';
@@ -71,7 +71,7 @@ if (!in_array($subject, $allowed_subjects, true)) {
 
 file_put_contents($key, $now);
 
-$email_subject = '[Support] ' . $subject . ' — ' . $name;
+$email_subject = '[Support] ' . $subject . ' - ' . $name;
 $body = "Support Request\n"
       . "===============\n\n"
       . "Name:      {$name}\n"

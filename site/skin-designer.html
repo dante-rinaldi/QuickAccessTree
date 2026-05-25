@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sidebar Buddy — Skin Designer</title>
+<title>Sidebar Buddy - Skin Designer</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -176,7 +176,7 @@
     cursor: pointer;
   }
 
-  /* Color overlay — sits between the bg image and the content */
+  /* Color overlay - sits between the bg image and the content */
   .mock-bg-overlay {
     position: absolute;
     inset: 0;
@@ -390,7 +390,7 @@
     flex-shrink: 0;
   }
 
-  /* Hex input is the primary entry — larger, monospace, prominent */
+  /* Hex input is the primary entry - larger, monospace, prominent */
   .hex-input {
     width: 88px;
     background: #1e1e30;
@@ -504,7 +504,7 @@
 
 <!-- ── Top bar ──────────────────────────────────────────────────── -->
 <div class="topbar">
-  <h1>Sidebar Buddy — Skin Designer</h1>
+  <h1>Sidebar Buddy - Skin Designer</h1>
   <label>Preset:</label>
   <select id="presetSelect" onchange="loadPreset(this.value)">
     <option value="DarkTheme">Dark Theme (None)</option>
@@ -551,7 +551,7 @@
 
   <!-- Preview -->
   <div class="preview-col">
-    <div class="preview-label">Live Preview — click any part to highlight its controls →</div>
+    <div class="preview-label">Live Preview - click any part to highlight its controls →</div>
 
     <div class="sidebar-mock">
       <!-- Header -->
@@ -797,7 +797,7 @@
 <div class="modal-overlay" id="exportModal">
   <div class="modal">
     <div class="modal-head">
-      <h2>Generated C# — paste into ThemeManager.cs</h2>
+      <h2>Generated C# - paste into ThemeManager.cs</h2>
       <button class="modal-close" onclick="closeExport()">✕</button>
     </div>
     <div class="modal-body">
@@ -1006,7 +1006,7 @@ function loadPreset(name) {
   document.getElementById('glowRange').value = glow;
   setGlowIntensity(glow, true);
 
-  // Texture — auto-load preset image
+  // Texture - auto-load preset image
   const mockBody = document.getElementById('mockBody');
   if (p.texture) {
     mockBody.style.backgroundImage = `url('../textures/${p.texture}')`;

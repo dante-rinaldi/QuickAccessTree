@@ -51,8 +51,8 @@ public class AppSettings
     public string? CustomImagePath        { get; set; }
 
     // Quick links
-    public bool             ShowThisPC          { get; set; } = false;
-    public bool             ShowControlPanel    { get; set; } = false;
+    public bool             ShowThisPC          { get; set; } = true;
+    public bool             ShowControlPanel    { get; set; } = true;
     public QuickLinkPosition QuickLinksPosition { get; set; } = QuickLinkPosition.Bottom;
 
     // First-run seeding

@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Contact / Support page
+ * Sidebar Buddy - Contact / Support page
  */
 ?>
 <!DOCTYPE html>

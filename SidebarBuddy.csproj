@@ -10,7 +10,7 @@
         <RootNamespace>SidebarBuddy</RootNamespace>
         <AssemblyName>SidebarBuddy</AssemblyName>
         <ApplicationIcon>SidebarBuddy.ico</ApplicationIcon>
-
+        <Version>1.0.4</Version>
     </PropertyGroup>
 
     <ItemGroup>

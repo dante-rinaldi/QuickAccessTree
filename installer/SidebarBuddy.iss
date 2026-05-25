@@ -3,7 +3,7 @@
 ; Build: iscc installer\SidebarBuddy.iss
 
 #define AppName        "Sidebar Buddy"
-#define AppVersion     "1.0.1"
+#define AppVersion     "1.0.4"
 #define AppPublisher   "Inferno Creative Studio"
 #define AppURL         "https://sidebarbuddy.com"
 #define AppExeName     "SidebarBuddy.exe"
@@ -32,6 +32,18 @@ PrivilegesRequiredOverridesAllowed=commandline
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#AppExeName}
 CloseApplications=yes
+
+[Code]
+function InitializeSetup(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  // Kill any running instance so the installer can replace files and the
+  // "Start Now" checkbox on the Finish page doesn't hit the Already Running mutex.
+  Exec('taskkill.exe', '/F /IM SidebarBuddy.exe', '', SW_HIDE,
+       ewWaitUntilTerminated, ResultCode);
+  Result := True;
+end;
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

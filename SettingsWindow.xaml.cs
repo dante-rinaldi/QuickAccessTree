@@ -137,6 +137,17 @@ public partial class SettingsWindow : Window
 
             BuyNowBtn.Visibility = Visibility.Visible;
         }
+
+        VersionText.Text = $"Version {Services.UpdateService.CurrentVersion}";
+
+        var app = (App)System.Windows.Application.Current;
+        if (app.LatestUpdate is { Available: true } u)
+        {
+            UpdateStatusText.Text = $"Update available: v{u.LatestVersion}";
+            UpdateStatusText.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF9100"));
+            UpdateStatusText.Visibility = Visibility.Visible;
+        }
     }
 
     // ── Nav ───────────────────────────────────────────────────────────
@@ -240,6 +251,8 @@ public partial class SettingsWindow : Window
 
         // Behavior
         _settings.RestoreExpandedState = CbRestoreExpanded.IsChecked == true;
+        if (!_settings.RestoreExpandedState)
+            _settings.ExpandedPaths.Clear();
 
         bool startup = CbStartup.IsChecked == true;
         _settings.LaunchOnStartup = startup;
@@ -457,6 +470,37 @@ public partial class SettingsWindow : Window
 
     private void Support_Click(object sender, RoutedEventArgs e)
         => OpenUrl("https://sidebarbuddy.com/support");
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdatesBtn.IsEnabled = false;
+        CheckUpdatesBtn.Content = "Checking...";
+
+        var info = await Services.UpdateService.CheckAsync();
+
+        CheckUpdatesBtn.IsEnabled = true;
+        CheckUpdatesBtn.Content = "Check for Updates";
+
+        if (info.Available)
+        {
+            UpdateStatusText.Text = $"Update available: v{info.LatestVersion}";
+            UpdateStatusText.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF9100"));
+            UpdateStatusText.Visibility = Visibility.Visible;
+
+            if (info.DownloadUrl != null)
+                OpenUrl(info.DownloadUrl);
+            else
+                OpenUrl("https://sidebarbuddy.com/download");
+        }
+        else
+        {
+            UpdateStatusText.Text = "You're up to date!";
+            UpdateStatusText.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#69F0AE"));
+            UpdateStatusText.Visibility = Visibility.Visible;
+        }
+    }
 
     private static void OpenUrl(string url)
     {

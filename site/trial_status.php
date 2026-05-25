@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Trial Status Endpoint
+ * Sidebar Buddy - Trial Status Endpoint
  *
  * Called by the desktop app on launch to register the trial start date
  * server-side and get authoritative days remaining.

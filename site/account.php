@@ -1,17 +1,17 @@
 <?php
 /**
- * Sidebar Buddy — My Account Dashboard
+ * Sidebar Buddy - My Account Dashboard
  *
  * Email-based lookup with 6-digit verification code authentication.
  * States: email entry → code verification → dashboard
  *
  * AJAX routes (POST ?action=...):
- *   send_code        — check email exists, send 6-digit code
- *   verify_code      — validate code, return license data
- *   change_email     — update email on license record
- *   get_activations  — list registered machines
- *   remove_activation — self-service remove one machine (one-time)
- *   request_transfer — submit admin-review transfer request
+ *   send_code        - check email exists, send 6-digit code
+ *   verify_code      - validate code, return license data
+ *   change_email     - update email on license record
+ *   get_activations  - list registered machines
+ *   remove_activation - self-service remove one machine (one-time)
+ *   request_transfer - submit admin-review transfer request
  */
 
 session_start();
@@ -59,7 +59,7 @@ if (isset($_GET['action']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['code_attempts']  = 0;
             $_SESSION['code_sends'][]   = $now;
 
-            $subject  = 'Sidebar Buddy — Your Verification Code';
+            $subject  = 'Sidebar Buddy - Your Verification Code';
             $logoUrl  = 'https://raw.githubusercontent.com/dante-rinaldi/QuickAccessTree/master/site/logo/logo_sideBarBuddy_forEmail.jpg';
             $codeHtml = '<!DOCTYPE html>
 <html lang="en">
@@ -85,7 +85,7 @@ if (isset($_GET['action']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </td></tr>
     <tr><td style="padding:0 40px 36px;">
-      <p style="color:#6060a0;font-size:13px;margin:0;">If you didn\'t request this, you can safely ignore this email — your account is secure.</p>
+      <p style="color:#6060a0;font-size:13px;margin:0;">If you didn\'t request this, you can safely ignore this email - your account is secure.</p>
     </td></tr>
     <tr><td style="padding:20px 40px 24px;border-top:1px solid #1e1e30;">
       <p style="color:#404060;font-size:13px;margin:0;">Questions? <a href="https://sidebarbuddy.com/contact" style="color:#0e639c;text-decoration:none;">Contact support</a></p>
@@ -224,7 +224,7 @@ if (isset($_GET['action']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Account — Sidebar Buddy</title>
+  <title>My Account - Sidebar Buddy</title>
   <meta name="robots" content="noindex, follow">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -337,7 +337,7 @@ if (isset($_GET['action']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="acct-subtitle">Your license allows activation on up to 2 computers.</p>
         <div id="machinesList"></div>
         <div id="transferSection" class="acct-hidden" style="margin-top:16px;">
-          <p class="acct-subtitle">You've used your one free machine transfer. To free another slot, submit a request — we'll review it within 1 business day.</p>
+          <p class="acct-subtitle">You've used your one free machine transfer. To free another slot, submit a request - we'll review it within 1 business day.</p>
           <textarea id="transferNote" class="acct-input" placeholder="Briefly describe why you need to free a slot (e.g. old laptop died, replaced my desktop)…"></textarea>
           <button class="acct-btn" id="transferBtn" onclick="submitTransfer()">Submit Transfer Request</button>
           <p class="acct-error" id="transferError"></p>
@@ -476,7 +476,7 @@ function renderMachines(d) {
   html += '<p class="acct-slots">' + acts.length + ' of 2 slots used &nbsp;·&nbsp; ' + left + ' free transfer' + (left!==1?'s':'') + ' remaining</p>';
   list.innerHTML = html;
   if (d.has_pending_request) {
-    document.getElementById('transferSection').innerHTML = '<p class="acct-subtitle" style="color:#40c4ff;">✓ Transfer request submitted — we\'ll email you when it\'s approved.</p>';
+    document.getElementById('transferSection').innerHTML = '<p class="acct-subtitle" style="color:#40c4ff;">✓ Transfer request submitted - we\'ll email you when it\'s approved.</p>';
     show('transferSection');
   } else if (d.self_service_used) {
     show('transferSection');

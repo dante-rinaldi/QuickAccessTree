@@ -17,15 +17,25 @@ public partial class App : System.Windows.Application
     private SettingsService        _settingsService = new();
     private SettingsWindow?        _settingsWindow;
     public  AppSettings            Settings { get; private set; } = new();
+    public  UpdateInfo?            LatestUpdate { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        _singleInstanceMutex = new Mutex(true, "SidebarBuddy_SingleInstance_v1", out bool created);
-        if (!created)
+        _singleInstanceMutex = new Mutex(false, "SidebarBuddy_SingleInstance_v1");
+        bool owned;
+        try
+        {
+            owned = _singleInstanceMutex.WaitOne(TimeSpan.Zero);
+        }
+        catch (AbandonedMutexException)
+        {
+            // Previous holder exited without releasing (e.g. Windows Fast Startup / crash).
+            // AbandonedMutexException means we now own it — safe to continue.
+            owned = true;
+        }
+        if (!owned)
         {
             _singleInstanceMutex.Dispose();
-            System.Windows.MessageBox.Show("Sidebar Buddy is already running. Check the system tray.",
-                "Sidebar Buddy", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
         }
@@ -90,7 +100,10 @@ public partial class App : System.Windows.Application
         ThemeManager.ApplySkin(Settings.Skin);
         ThemeManager.ApplyAppearance(Settings);
 
-        _mainWindow.Hide(); // parked off-screen; ExplorerAttachService shows it
+        // Window stays visible at Left=-32000 (off-screen from XAML).
+        // Never use Hide/Visibility.Hidden — toggling Visibility on a
+        // WS_EX_NOACTIVATE + AllowsTransparency window disconnects
+        // WPF's HwndSource input routing and breaks mouse clicks on re-show.
 
         _attachService = new ExplorerAttachService(
             _mainWindow, Settings.SidebarWidthDip, Settings.DockSide);
@@ -104,6 +117,13 @@ public partial class App : System.Windows.Application
             _ = RevalidateLicenseInBackgroundAsync();
 
         SetupTrayIcon();
+
+        _ = CheckForUpdatesAsync();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        LatestUpdate = await UpdateService.CheckAsync();
     }
 
     private void SetupTrayIcon()
@@ -118,7 +138,6 @@ public partial class App : System.Windows.Application
         };
 
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Show sidebar", null, (_, _) => Dispatcher.Invoke(ForceShow));
         menu.Items.Add("Settings…",    null, (_, _) => Dispatcher.Invoke(OpenSettings));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => Dispatcher.Invoke(Shutdown));
@@ -224,11 +243,8 @@ public partial class App : System.Windows.Application
 
     private void ForceShow()
     {
-        // Try to attach to an open Explorer; if none, just reveal the sidebar
-        if (_attachService != null)
-            _attachService.ForceAttach();
-        else if (_mainWindow is { IsVisible: false })
-            _mainWindow.Show();
+        _attachService?.SuppressAutoHide();
+        _attachService?.ForceAttach();
     }
 
     protected override void OnExit(ExitEventArgs e)

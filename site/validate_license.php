@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — License Validation Endpoint
+ * Sidebar Buddy - License Validation Endpoint
  *
  * Called by the desktop app to activate a license.
  * Verifies email + key, enforces the 2-machine limit, records the device.
@@ -93,7 +93,7 @@ if (!$stmt->fetch()) {
     exit;
 }
 
-// Revalidation mode: lightweight check only — no device upsert
+// Revalidation mode: lightweight check only - no device upsert
 if ($revalidate) {
     echo json_encode(['valid' => true]);
     exit;
@@ -117,7 +117,7 @@ if ($device_id && preg_match('/^[0-9a-f]{32,64}$/', $device_id)) {
             echo json_encode([
                 'valid'      => false,
                 'error_code' => 'activation_limit',
-                'error'      => 'This license is active on ' . ACTIVATION_LIMIT . ' computers — the maximum allowed. '
+                'error'      => 'This license is active on ' . ACTIVATION_LIMIT . ' computers - the maximum allowed. '
                               . 'Visit sidebarbuddy.com/contact to free a slot.',
             ]);
             exit;
@@ -145,14 +145,14 @@ if ($device_id && preg_match('/^[0-9a-f]{32,64}$/', $device_id)) {
 
     // Notify buyer of new machine activation (not on reinstall)
     if (!$alreadyActivated) {
-        $subject = 'Sidebar Buddy — New Machine Activation';
+        $subject = 'Sidebar Buddy - New Machine Activation';
         $body    = "Your Sidebar Buddy license was activated on a new computer.\n\n"
                  . "  Computer: " . ($hostname ?: 'unknown') . "\n"
                  . "  Location: " . ($country  ?: 'unknown') . "\n"
                  . "  Time:     " . date('Y-m-d H:i:s T') . "\n\n"
                  . "If this was you, no action needed.\n"
                  . "If it wasn't, visit sidebarbuddy.com/contact.\n\n"
-                 . "— Sidebar Buddy";
+                 . "- Sidebar Buddy";
         resendMailText($email, $subject, $body);
     }
 }

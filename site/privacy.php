@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Privacy Policy
+ * Sidebar Buddy - Privacy Policy
  */
 $pageTitle = 'Privacy Policy - Sidebar Buddy';
 ?>
@@ -10,6 +10,9 @@ $pageTitle = 'Privacy Policy - Sidebar Buddy';
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= htmlspecialchars($pageTitle) ?></title>
+  <meta name="description" content="Read the Sidebar Buddy Privacy Policy. We collect no personal data - your folder list never leaves your machine. License purchases are processed securely through PayPal." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://sidebarbuddy.com/privacy" />
   <link rel="stylesheet" href="style.css" />
   <style>
     .policy-page {
@@ -80,7 +83,7 @@ $pageTitle = 'Privacy Policy - Sidebar Buddy';
 
     <p>Your privacy matters to us. This policy explains what information Sidebar Buddy ("the App") and this website collect, how it is used, and how it is protected.</p>
 
-    <h2>1. The App — Local Data Only</h2>
+    <h2>1. The App - Local Data Only</h2>
     <p>Sidebar Buddy runs entirely on your local device. The App:</p>
     <ul>
       <li>Does not collect, transmit, or upload any personal data</li>
@@ -93,7 +96,7 @@ $pageTitle = 'Privacy Policy - Sidebar Buddy';
     <h2>2. License Activation</h2>
     <p>When you enter a license key, the App validates it locally against your stored purchase record. No request is made to an external server during this process. Your license key is stored locally and is not transmitted back to us.</p>
 
-    <h2>3. Website — Information We Collect</h2>
+    <h2>3. Website - Information We Collect</h2>
     <p>When you visit <strong>sidebarbuddy.com</strong> or interact with our purchase or notification forms, we may collect:</p>
     <ul>
       <li><strong>Email address</strong> - when you sign up for launch notifications or complete a purchase. Used to deliver your license key and important account notices.</li>

@@ -108,6 +108,19 @@ $pageTitle = 'Changelog - Sidebar Buddy';
 
     <div class="release">
       <div class="release-header">
+        <span class="release-version">v1.0.4</span>
+        <span class="release-date">May 2026</span>
+      </div>
+      <ul>
+        <li><span class="tag tag-fixed">Fixed</span>"Already running" dialog on reboot when Windows restart-app recovery launched a second instance</li>
+        <li><span class="tag tag-fixed">Fixed</span>Deleting a group with children crashed with a null path error</li>
+        <li><span class="tag tag-fixed">Fixed</span>Delete-group confirmation dialog appeared behind Explorer instead of on top</li>
+        <li><span class="tag tag-changed">Changed</span>Scrollbar thumb is narrower for a cleaner look</li>
+      </ul>
+    </div>
+
+    <div class="release">
+      <div class="release-header">
         <span class="release-version">v1.0.2</span>
         <span class="release-date">May 2026</span>
       </div>

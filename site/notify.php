@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Launch Notification Signup
+ * Sidebar Buddy - Launch Notification Signup
  * Saves email to notify_list table and alerts the owner.
  */
 

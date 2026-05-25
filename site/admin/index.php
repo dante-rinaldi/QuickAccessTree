@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Admin Panel
+ * Sidebar Buddy - Admin Panel
  * Password-protected. ADMIN_PASSWORD defined in private/secrets.php.
  */
 
@@ -28,7 +28,7 @@ if (empty($_SESSION['sb_admin'])) {
     // Login screen
     ?><!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Admin — Sidebar Buddy</title>
+<head><meta charset="UTF-8"><title>Admin - Sidebar Buddy</title>
 <style>
   body{margin:0;font-family:'Segoe UI',sans-serif;background:#0d0d10;color:#e0e0e0;display:flex;align-items:center;justify-content:center;height:100vh;}
   .box{background:#13131a;border:1px solid #2a2a3e;border-radius:10px;padding:36px 40px;width:320px;}
@@ -247,7 +247,7 @@ if ($tab === 'licenses' && $licenses) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin — Sidebar Buddy</title>
+<title>Admin - Sidebar Buddy</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d0d10; color: #dcdcdc; font-size: 14px; }
@@ -306,7 +306,7 @@ if ($tab === 'licenses' && $licenses) {
 <body>
 
 <div class="header">
-  <h1>&#9632; Sidebar Buddy — Admin</h1>
+  <h1>&#9632; Sidebar Buddy - Admin</h1>
   <a href="?logout=1">Sign out</a>
 </div>
 
@@ -390,7 +390,7 @@ if ($tab === 'licenses' && $licenses) {
             <td class="muted"><?= htmlspecialchars($lic['payer_name'] ?? '') ?></td>
             <td><span class="mono"><?= htmlspecialchars($lic['license_key']) ?></span></td>
             <td><span class="badge <?= $lic['type'] ?>"><?= htmlspecialchars($lic['type']) ?></span></td>
-            <td><?= $lic['amount'] > 0 ? '$' . number_format((float)$lic['amount'], 2) : '—' ?></td>
+            <td><?= $lic['amount'] > 0 ? '$' . number_format((float)$lic['amount'], 2) : '-' ?></td>
             <td>
               <?php if ((int)$lic['activations'] > 0): ?>
                 <button class="act-toggle" data-key="<?= htmlspecialchars($lic['license_key']) ?>"
@@ -422,10 +422,10 @@ if ($tab === 'licenses' && $licenses) {
                   <?php foreach ($activationDetails[$lic['license_key']] as $act): ?>
                   <tr>
                     <td style="padding:5px 8px;font-family:'Courier New',monospace;font-size:11px;color:#7070a0;word-break:break-all;"><?= htmlspecialchars($act['device_id']) ?></td>
-                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['mac_address'] ?? '—') ?></td>
-                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['hostname'] ?? '—') ?></td>
-                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['ip_address'] ?? '—') ?></td>
-                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['country'] ?? '—') ?></td>
+                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['mac_address'] ?? '-') ?></td>
+                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['hostname'] ?? '-') ?></td>
+                    <td style="padding:5px 8px;" class="mono"><?= htmlspecialchars($act['ip_address'] ?? '-') ?></td>
+                    <td style="padding:5px 8px;color:#9090b0;"><?= htmlspecialchars($act['country'] ?? '-') ?></td>
                     <td style="padding:5px 8px;" class="muted"><?= htmlspecialchars(substr($act['last_seen'] ?? '', 0, 16)) ?></td>
                   </tr>
                   <?php endforeach; ?>
@@ -463,10 +463,10 @@ if ($tab === 'licenses' && $licenses) {
             <td class="muted"><?= htmlspecialchars(substr($t['first_seen'] ?? '', 0, 10)) ?></td>
             <td class="muted"><?= htmlspecialchars(substr($t['last_seen']  ?? '', 0, 10)) ?></td>
             <td><?= (int)$t['launch_count'] ?></td>
-            <td class="mono"><?= htmlspecialchars($t['ip_address'] ?? '—') ?></td>
-            <td><?= htmlspecialchars(implode(', ', array_filter([$t['city'] ?? null, $t['country'] ?? null])) ?: '—') ?></td>
-            <td class="mono"><?= htmlspecialchars($t['mac_address'] ?? '—') ?></td>
-            <td style="font-family:'Courier New',monospace;font-size:11px;color:#7070a0;word-break:break-all;max-width:200px;"><?= htmlspecialchars($t['device_id'] ?? '—') ?></td>
+            <td class="mono"><?= htmlspecialchars($t['ip_address'] ?? '-') ?></td>
+            <td><?= htmlspecialchars(implode(', ', array_filter([$t['city'] ?? null, $t['country'] ?? null])) ?: '-') ?></td>
+            <td class="mono"><?= htmlspecialchars($t['mac_address'] ?? '-') ?></td>
+            <td style="font-family:'Courier New',monospace;font-size:11px;color:#7070a0;word-break:break-all;max-width:200px;"><?= htmlspecialchars($t['device_id'] ?? '-') ?></td>
           </tr>
           <?php endforeach; ?>
           <?php if (!$trials): ?>
@@ -492,8 +492,8 @@ if ($tab === 'licenses' && $licenses) {
           <?php foreach ($downloads as $dl): ?>
           <tr>
             <td class="muted"><?= htmlspecialchars($dl['clicked_at'] ?? '') ?></td>
-            <td class="mono"><?= htmlspecialchars($dl['ip_address'] ?? '—') ?></td>
-            <td><?= htmlspecialchars(implode(', ', array_filter([$dl['city'] ?? null, $dl['region'] ?? null, $dl['country'] ?? null])) ?: '—') ?></td>
+            <td class="mono"><?= htmlspecialchars($dl['ip_address'] ?? '-') ?></td>
+            <td><?= htmlspecialchars(implode(', ', array_filter([$dl['city'] ?? null, $dl['region'] ?? null, $dl['country'] ?? null])) ?: '-') ?></td>
             <td class="muted" style="font-size:11px;"><?= htmlspecialchars(substr($dl['user_agent'] ?? '', 0, 80)) ?></td>
           </tr>
           <?php endforeach; ?>

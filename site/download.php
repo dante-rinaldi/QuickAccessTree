@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Download Tracker
+ * Sidebar Buddy - Download Tracker
  *
  * Sends an admin notification email then redirects to the
  * installer on GitHub Releases. Bot/crawler downloads are

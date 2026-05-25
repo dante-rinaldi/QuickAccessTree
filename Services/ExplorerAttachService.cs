@@ -23,6 +23,7 @@ public class ExplorerAttachService : IDisposable
     private CancellationTokenSource?    _showCts;
     private bool                        _showPending;
     private long                        _suppressNewTrackingUntil; // Environment.TickCount64
+    private long                        _suppressAutoHideUntil;    // Environment.TickCount64
 
     public double ShowDelaySecs { get; set; } = 0;
     public bool   AutoHide      { get; set; } = false;
@@ -74,6 +75,13 @@ public class ExplorerAttachService : IDisposable
 
     private bool IsNewWindowSuppressed()
         => Environment.TickCount64 < Interlocked.Read(ref _suppressNewTrackingUntil);
+
+    public void SuppressAutoHide(int milliseconds = 1500)
+        => Interlocked.Exchange(ref _suppressAutoHideUntil,
+               Environment.TickCount64 + milliseconds);
+
+    private bool IsAutoHideSuppressed()
+        => Environment.TickCount64 < Interlocked.Read(ref _suppressAutoHideUntil);
 
     public void UpdateDockSide(DockSide side)
     {
@@ -128,7 +136,7 @@ public class ExplorerAttachService : IDisposable
         {
             NativeMethods.GetWindowThreadProcessId(fg, out uint pid);
             if ((int)pid != Environment.ProcessId && SidebarIsVisible()
-                && AutoHide && !IsCollapsed)
+                && AutoHide && !IsCollapsed && !IsAutoHideSuppressed())
                 HideSidebar();
         }
     }
@@ -149,7 +157,7 @@ public class ExplorerAttachService : IDisposable
             if (hwnd == _explorerHwnd || !IsNewWindowSuppressed())
                 Dispatch(() => Track(hwnd));
         }
-        else if (AutoHide && !IsCollapsed)
+        else if (AutoHide && !IsCollapsed && !IsAutoHideSuppressed())
             Dispatch(HideSidebar);
     }
 
@@ -172,7 +180,6 @@ public class ExplorerAttachService : IDisposable
         if (IsRecycleBin(hwnd)) return;
         bool isNew = hwnd != _explorerHwnd;
         _explorerHwnd = hwnd;
-        SnapSidebar(hwnd);
         ShowSidebar(immediate: false);
         if (isNew) OnReattached?.Invoke();
     }
@@ -242,15 +249,14 @@ public class ExplorerAttachService : IDisposable
 
     private void ShowSidebarNow()
     {
-        _sidebar.Visibility = Visibility.Visible;
+        if (_explorerHwnd != nint.Zero)
+            SnapSidebar(_explorerHwnd);
 
         var helper = new WindowInteropHelper(_sidebar);
         nint hwnd = helper.Handle;
         if (hwnd == nint.Zero) return;
 
-        // Place sidebar just above Explorer in z-order (not at the absolute top of all windows)
-        // so that other apps (Chrome, VS Code, etc.) can still cover the sidebar.
-        BringAboveExplorer(showWindow: true);
+        BringAboveExplorer();
     }
 
     private void BringAboveExplorer(bool showWindow = false)
@@ -271,19 +277,12 @@ public class ExplorerAttachService : IDisposable
     {
         _showPending = false;
         _showCts?.Cancel();
-        var helper = new WindowInteropHelper(_sidebar);
-        NativeMethods.SetWindowPos(helper.Handle, nint.Zero,
-            0, 0, 0, 0,
-            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE
-            | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE
-            | NativeMethods.SWP_HIDEWINDOW);
-        _sidebar.Visibility = Visibility.Hidden;
+        _sidebar.Left = -32000;
     }
 
     private bool SidebarIsVisible()
     {
-        var helper = new WindowInteropHelper(_sidebar);
-        return helper.Handle != nint.Zero && NativeMethods.IsWindowVisible(helper.Handle);
+        return _sidebar.Left > -30000;
     }
 
     // ── Explorer interaction ──────────────────────────────────────────────

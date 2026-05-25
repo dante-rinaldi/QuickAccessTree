@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Terms of Service
+ * Sidebar Buddy - Terms of Service
  */
 $pageTitle = 'Terms of Service - Sidebar Buddy';
 ?>
@@ -10,6 +10,9 @@ $pageTitle = 'Terms of Service - Sidebar Buddy';
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= htmlspecialchars($pageTitle) ?></title>
+  <meta name="description" content="Read the Sidebar Buddy Terms of Service. Personal, non-transferable license. $10 one-time purchase. 15-day free trial available." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://sidebarbuddy.com/terms" />
   <link rel="stylesheet" href="style.css" />
   <style>
     .policy-page {
@@ -87,7 +90,7 @@ $pageTitle = 'Terms of Service - Sidebar Buddy';
     <p>A 15-day free trial is available without a license key. At the end of the trial period, certain features will be restricted until a valid license key is entered. Trial use is subject to these same terms.</p>
 
     <h2>3. One-Time Purchase &amp; Refunds</h2>
-    <p>The App is sold for a one-time fee of $10.00 USD. Because digital software is immediately usable upon delivery, all sales are final. If you experience a technical issue, please contact support before requesting a refund — we will make every reasonable effort to resolve it.</p>
+    <p>The App is sold for a one-time fee of $10.00 USD. Because digital software is immediately usable upon delivery, all sales are final. If you experience a technical issue, please contact support before requesting a refund - we will make every reasonable effort to resolve it.</p>
 
     <h2>4. Permitted Use</h2>
     <p>You may use the App for personal or professional purposes on your own devices. You may not:</p>

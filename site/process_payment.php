@@ -1,6 +1,6 @@
 <?php
 /**
- * Sidebar Buddy — Payment Processing & License Key Generation
+ * Sidebar Buddy - Payment Processing & License Key Generation
  *
  * Receives POST data after a successful PayPal client-side capture,
  * verifies the order server-side with the PayPal REST API,
@@ -175,7 +175,7 @@ function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
         You\'re all set, ' . htmlspecialchars($firstName) . '! &#127881;
       </h1>
       <p style="color:#9090b8;font-size:15px;line-height:1.6;margin:0 0 32px;">
-        Thanks for purchasing Sidebar Buddy. Your license key is below — keep this email somewhere safe.
+        Thanks for purchasing Sidebar Buddy. Your license key is below - keep this email somewhere safe.
       </p>
     </td></tr>
 
@@ -233,7 +233,7 @@ function sendBuyerEmail(string $email, string $name, string $licenseKey): void {
 }
 
 function sendOwnerNotification(string $email, string $name, string $orderId, string $licenseKey): void {
-    $subject = 'New Sidebar Buddy Sale — $' . number_format(APP_PRICE, 2) . ' USD';
+    $subject = 'New Sidebar Buddy Sale - $' . number_format(APP_PRICE, 2) . ' USD';
     $body    = "New sale!\n\n"
              . "Buyer:    {$name} <{$email}>\n"
              . "Order ID: {$orderId}\n"

@@ -56,7 +56,14 @@ public partial class MainWindow : Window
         _settings    = settings;
         _attachSvc   = attachSvc;
         _settingsSvc = settingsSvc;
-        attachSvc.AutoHide = settings.AutoHide;
+        attachSvc.AutoHide      = settings.AutoHide;
+        attachSvc.ShowDelaySecs = settings.VisibilityDelay switch
+        {
+            ShowDelay.HalfSecond  => 0.5,
+            ShowDelay.TwoSeconds  => 2.0,
+            ShowDelay.FiveSeconds => 5.0,
+            _                     => 0.0,
+        };
         LoadTree();
         ApplyDockCorners();
     }
@@ -191,6 +198,7 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName != nameof(FolderNode.IsExpanded)) return;
         if (sender is not FolderNode n) return;
+        if (!_settings.RestoreExpandedState) return;
         _settings.ExpandedPaths[n.Path] = n.IsExpanded;
         _settingsSvc.Save(_settings);
     }
@@ -1035,6 +1043,8 @@ public partial class MainWindow : Window
     {
         foreach (var node in nodes)
         {
+            if (string.IsNullOrEmpty(node.Path)) continue;
+
             if (node.IsDivider)
             {
                 _settings.DividerPaths.Remove(node.Path);
@@ -1044,6 +1054,8 @@ public partial class MainWindow : Window
             else if (node.IsGroup)
             {
                 _settings.GroupNames.Remove(node.Path);
+                _settings.FolderColors.Remove(node.Path);
+                _settings.ExpandedPaths.Remove(node.Path);
                 foreach (var p in _settings.Placements)
                     if (p.ParentPath?.Equals(node.Path, StringComparison.OrdinalIgnoreCase) == true)
                         p.ParentPath = null;
@@ -1054,6 +1066,8 @@ public partial class MainWindow : Window
             {
                 _settings.CustomFolders.RemoveAll(
                     cf => cf.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+                _settings.FolderColors.Remove(node.Path);
+                _settings.ExpandedPaths.Remove(node.Path);
                 if (!_settings.RemovedPaths.Contains(node.Path, StringComparer.OrdinalIgnoreCase))
                     _settings.RemovedPaths.Add(node.Path);
             }
@@ -1098,6 +1112,8 @@ public partial class MainWindow : Window
 
     private void RemoveFolderNode(FolderNode node)
     {
+        if (string.IsNullOrEmpty(node.Path)) return;
+
         // SAFETY: this removes only the sidebar bookmark from our settings JSON.
         // No filesystem operations are performed — no files or folders are ever deleted.
         if (node.IsDivider)
@@ -1111,7 +1127,7 @@ public partial class MainWindow : Window
         }
         if (node.IsGroup)
         {
-            var answer = System.Windows.MessageBox.Show(
+            var answer = ShowModalMessageBox(
                 "Delete the group header only (keep all folders, moved to root),\n" +
                 "or delete the group and everything inside it?\n\n" +
                 "Yes — Delete group and all contents\n" +
@@ -1130,15 +1146,20 @@ public partial class MainWindow : Window
                 var descendantSet = new HashSet<string>(descendants, StringComparer.OrdinalIgnoreCase);
                 foreach (var descPath in descendants)
                 {
+                    if (string.IsNullOrEmpty(descPath)) continue;
                     _settings.GroupNames.Remove(descPath);
                     _settings.DividerPaths.Remove(descPath);
                     _settings.CustomFolders.RemoveAll(
                         cf => cf.Path.Equals(descPath, StringComparison.OrdinalIgnoreCase));
+                    _settings.FolderColors.Remove(descPath);
+                    _settings.ExpandedPaths.Remove(descPath);
                     bool isSynthetic = descPath.StartsWith("§", StringComparison.Ordinal);
                     if (!isSynthetic &&
                         !_settings.RemovedPaths.Contains(descPath, StringComparer.OrdinalIgnoreCase))
                         _settings.RemovedPaths.Add(descPath);
                 }
+                _settings.FolderColors.Remove(node.Path);
+                _settings.ExpandedPaths.Remove(node.Path);
                 _settings.Placements.RemoveAll(p =>
                     p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase) ||
                     descendantSet.Contains(p.Path));
@@ -1152,12 +1173,16 @@ public partial class MainWindow : Window
                 }
                 _settings.Placements.RemoveAll(
                     p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+                _settings.FolderColors.Remove(node.Path);
+                _settings.ExpandedPaths.Remove(node.Path);
             }
         }
         else
         {
             _settings.CustomFolders.RemoveAll(
                 cf => cf.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
+            _settings.FolderColors.Remove(node.Path);
+            _settings.ExpandedPaths.Remove(node.Path);
             if (!_settings.RemovedPaths.Contains(node.Path))
                 _settings.RemovedPaths.Add(node.Path);
         }
@@ -1178,6 +1203,29 @@ public partial class MainWindow : Window
             }
         }
         return result;
+    }
+
+    // ── Modal dialog helper ─────────────────────────────────────────────
+
+    private MessageBoxResult ShowModalMessageBox(
+        string text, string caption,
+        MessageBoxButton buttons, MessageBoxImage icon)
+    {
+        var helper = new WindowInteropHelper(this);
+        int exStyle = NativeMethods.GetWindowLong(helper.Handle, NativeMethods.GWL_EXSTYLE);
+        NativeMethods.SetWindowLong(helper.Handle, NativeMethods.GWL_EXSTYLE,
+            exStyle & ~NativeMethods.WS_EX_NOACTIVATE & ~NativeMethods.WS_EX_TOOLWINDOW);
+        _attachSvc?.SuppressAutoHide(10000);
+        try
+        {
+            NativeMethods.SetForegroundWindow(helper.Handle);
+            return System.Windows.MessageBox.Show(this, text, caption, buttons, icon);
+        }
+        finally
+        {
+            NativeMethods.SetWindowLong(helper.Handle, NativeMethods.GWL_EXSTYLE, exStyle);
+            _attachSvc?.FocusExplorer();
+        }
     }
 
     // ── Color picker ──────────────────────────────────────────────────────
@@ -1221,13 +1269,18 @@ public partial class MainWindow : Window
         {
             target.Color = hex;
             _settings.FolderColors[target.Path] = hex;
-            foreach (var desc in GetVisualDescendants(target))
-                _settings.FolderColors[desc.Path] = hex;
+            if (_settings.ColorInheritance == ColorInheritanceMode.Cascade)
+            {
+                foreach (var desc in GetVisualDescendants(target))
+                {
+                    desc.Color = hex;
+                    _settings.FolderColors[desc.Path] = hex;
+                }
+            }
         }
 
         _settingsSvc.Save(_settings);
         ColorPickerPopup.IsOpen = false;
-        LoadTree();
     }
 
     private void ColorReset_Click(object sender, RoutedEventArgs e)
@@ -1240,16 +1293,14 @@ public partial class MainWindow : Window
         foreach (var target in targets)
         {
             target.Color = null;
-            // Store explicit yellow rather than removing — prevents cascade mode from
-            // re-applying an ancestor's color over the reset folder.
-            _settings.FolderColors[target.Path] = "#FFC000";
-            foreach (var desc in GetVisualDescendants(target))
-                _settings.FolderColors.Remove(desc.Path);
+            if (_settings.ColorInheritance == ColorInheritanceMode.Cascade)
+                _settings.FolderColors[target.Path] = "#FFC000";
+            else
+                _settings.FolderColors.Remove(target.Path);
         }
 
         _settingsSvc.Save(_settings);
         ColorPickerPopup.IsOpen = false;
-        LoadTree();
     }
 
     // ── Rename ────────────────────────────────────────────────────────────
